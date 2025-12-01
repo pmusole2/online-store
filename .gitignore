@@ -31,6 +31,8 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
+.env.*
 .env*.local
 
 # typescript
@@ -39,3 +41,42 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Convex
+.convex/
+
+# Build outputs
+build/
+coverage/
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# Secrets
+credentials.json
+google-services.json
+GoogleService-Info.plist
+
+# Logs
+logs/
+*.log
+
+# Next.js
+.next/
+out/
+.vercel/
+
+# NestJS
+/apps/api/dist/
+
+# Testing
+.nyc_output/
+
+# Turbo
+.turbo/
+
+# Misc
+.claude/
+*.local

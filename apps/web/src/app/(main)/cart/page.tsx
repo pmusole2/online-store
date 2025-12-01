@@ -1,0 +1,459 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../../../../convex/_generated/api";
+import { Id } from "../../../../../../convex/_generated/dataModel";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  ShoppingCart,
+  Trash2,
+  Plus,
+  Minus,
+  ShoppingBag,
+  AlertTriangle,
+  Shield,
+  Truck,
+} from "lucide-react";
+import { ROUTES } from "@/lib/constants";
+import { formatZMW } from "@auto-marketplace/shared";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+
+export default function CartPage() {
+  const router = useRouter();
+  const { user, isSignedIn, isLoading: authLoading } = useAuth();
+  const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
+
+  // Get cart data
+  const cart = useQuery(
+    api.cart.getCart,
+    user?._id ? { userId: user._id } : "skip"
+  );
+
+  // Validate cart
+  const validation = useQuery(
+    api.cart.validateCart,
+    user?._id ? { userId: user._id } : "skip"
+  );
+
+  // Mutations
+  const updateQuantity = useMutation(api.cart.updateCartQuantity);
+  const updateShipping = useMutation(api.cart.updateCartShipping);
+  const removeFromCart = useMutation(api.cart.removeFromCart);
+  const clearCart = useMutation(api.cart.clearCart);
+
+  const handleQuantityChange = async (
+    cartItemId: Id<"cartItems">,
+    newQuantity: number
+  ) => {
+    if (!user) return;
+
+    try {
+      await updateQuantity({
+        cartItemId,
+        userId: user._id,
+        quantity: newQuantity,
+      });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to update quantity";
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleShippingChange = async (
+    cartItemId: Id<"cartItems">,
+    shippingName: string,
+    shippingPrice: number
+  ) => {
+    if (!user) return;
+
+    try {
+      await updateShipping({
+        cartItemId,
+        userId: user._id,
+        selectedShipping: { name: shippingName, price: shippingPrice },
+      });
+    } catch (error) {
+      toast.error("Failed to update shipping option");
+    }
+  };
+
+  const handleRemoveItem = async (cartItemId: Id<"cartItems">) => {
+    if (!user) return;
+
+    setRemovingItems((prev) => new Set(prev).add(cartItemId));
+
+    try {
+      await removeFromCart({ cartItemId, userId: user._id });
+      toast.success("Item removed from cart");
+    } catch (error) {
+      toast.error("Failed to remove item");
+    } finally {
+      setRemovingItems((prev) => {
+        const next = new Set(prev);
+        next.delete(cartItemId);
+        return next;
+      });
+    }
+  };
+
+  const handleClearCart = async () => {
+    if (!user) return;
+
+    try {
+      await clearCart({ userId: user._id });
+      toast.success("Cart cleared");
+    } catch (error) {
+      toast.error("Failed to clear cart");
+    }
+  };
+
+  const handleProceedToCheckout = () => {
+    if (validation && !validation.isValid) {
+      toast.error("Please resolve cart issues before checkout");
+      return;
+    }
+    router.push(ROUTES.CHECKOUT);
+  };
+
+  // Loading state
+  if (authLoading || (isSignedIn && cart === undefined)) {
+    return <CartSkeleton />;
+  }
+
+  // Not signed in
+  if (!isSignedIn) {
+    return (
+      <div className="container flex flex-col items-center justify-center py-16">
+        <ShoppingCart className="h-16 w-16 text-muted-foreground" />
+        <h1 className="mt-4 text-2xl font-bold">Your Cart</h1>
+        <p className="mt-2 text-muted-foreground">
+          Please sign in to view your cart
+        </p>
+        <Button asChild className="mt-6">
+          <Link href={ROUTES.SIGN_IN}>Sign In</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  // Empty cart
+  if (!cart || cart.items.length === 0) {
+    return (
+      <div className="container flex flex-col items-center justify-center py-16">
+        <ShoppingBag className="h-16 w-16 text-muted-foreground" />
+        <h1 className="mt-4 text-2xl font-bold">Your cart is empty</h1>
+        <p className="mt-2 text-muted-foreground">
+          Browse our marketplace to find great deals
+        </p>
+        <Button asChild className="mt-6">
+          <Link href={ROUTES.BROWSE}>Browse Products</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container py-6">
+      {/* Breadcrumb */}
+      <Breadcrumb className="mb-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href={ROUTES.HOME}>Home</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Shopping Cart</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">
+          Shopping Cart ({cart.itemCount} {cart.itemCount === 1 ? "item" : "items"})
+        </h1>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="sm" className="text-destructive">
+              Clear Cart
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Clear your cart?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will remove all items from your cart. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleClearCart}>
+                Clear Cart
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+
+      {/* Validation Issues */}
+      {validation && !validation.isValid && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Some items in your cart have issues:</strong>
+            <ul className="mt-2 list-disc list-inside">
+              {validation.issues.map((issue, index) => (
+                <li key={index}>{issue.issue}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Cart Items */}
+        <div className="lg:col-span-2 space-y-4">
+          {cart.items.map((item) => (
+            <Card key={item._id} className={removingItems.has(item._id) ? "opacity-50" : ""}>
+              <CardContent className="p-4">
+                <div className="flex gap-4">
+                  {/* Product Image */}
+                  <Link href={ROUTES.PRODUCT(item.product._id)} className="shrink-0">
+                    <div className="h-24 w-24 overflow-hidden rounded-lg bg-muted">
+                      <img
+                        src={item.product.images?.[0] || "/placeholder.png"}
+                        alt={item.product.title}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  </Link>
+
+                  {/* Product Details */}
+                  <div className="flex-1 min-w-0">
+                    <Link
+                      href={ROUTES.PRODUCT(item.product._id)}
+                      className="font-medium hover:underline line-clamp-2"
+                    >
+                      {item.product.title}
+                    </Link>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Sold by {item.product.sellerName}
+                    </p>
+                    <p className="font-semibold text-primary mt-2">
+                      {formatZMW(item.product.price)}
+                    </p>
+
+                    {/* Shipping Option */}
+                    {item.product.shippingOptions && item.product.shippingOptions.length > 0 && (
+                      <div className="mt-2">
+                        <Select
+                          value={item.selectedShipping.name}
+                          onValueChange={(value) => {
+                            const option = item.product.shippingOptions?.find(
+                              (o) => o.name === value
+                            );
+                            if (option) {
+                              handleShippingChange(
+                                item._id as Id<"cartItems">,
+                                option.name,
+                                option.price
+                              );
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="w-[200px] h-8 text-sm">
+                            <Truck className="h-3 w-3 mr-2" />
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {item.product.shippingOptions.map((option) => (
+                              <SelectItem key={option.name} value={option.name}>
+                                {option.name} - {formatZMW(option.price)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quantity & Remove */}
+                  <div className="flex flex-col items-end gap-2">
+                    {/* Quantity Controls */}
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() =>
+                          handleQuantityChange(
+                            item._id as Id<"cartItems">,
+                            item.quantity - 1
+                          )
+                        }
+                        disabled={item.quantity <= 1}
+                      >
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      <span className="w-8 text-center">{item.quantity}</span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() =>
+                          handleQuantityChange(
+                            item._id as Id<"cartItems">,
+                            item.quantity + 1
+                          )
+                        }
+                        disabled={item.quantity >= item.product.quantity}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </div>
+
+                    {/* Stock Warning */}
+                    {item.quantity >= item.product.quantity && (
+                      <p className="text-xs text-amber-600">Max stock</p>
+                    )}
+
+                    {/* Item Total */}
+                    <p className="font-semibold">
+                      {formatZMW(item.product.price * item.quantity)}
+                    </p>
+
+                    {/* Remove Button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive h-8"
+                      onClick={() => handleRemoveItem(item._id as Id<"cartItems">)}
+                      disabled={removingItems.has(item._id)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Order Summary */}
+        <div className="lg:col-span-1">
+          <Card className="sticky top-4">
+            <CardHeader>
+              <CardTitle>Order Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span>{formatZMW(cart.subtotal)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Shipping</span>
+                <span>
+                  {cart.shippingTotal > 0 ? formatZMW(cart.shippingTotal) : "Free"}
+                </span>
+              </div>
+              <Separator />
+              <div className="flex justify-between font-semibold text-lg">
+                <span>Total</span>
+                <span className="text-primary">{formatZMW(cart.total)}</span>
+              </div>
+
+              {/* Escrow Notice */}
+              <div className="rounded-lg bg-green-50 dark:bg-green-950/20 p-3 mt-4">
+                <div className="flex gap-2">
+                  <Shield className="h-4 w-4 shrink-0 text-green-600 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium text-green-800 dark:text-green-400">
+                      Secure Escrow Payment
+                    </p>
+                    <p className="text-green-700 dark:text-green-500 mt-1">
+                      Your payment is protected until you confirm receipt
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={handleProceedToCheckout}
+                disabled={validation && !validation.isValid}
+              >
+                Proceed to Checkout
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CartSkeleton() {
+  return (
+    <div className="container py-6">
+      <Skeleton className="mb-6 h-4 w-48" />
+      <Skeleton className="mb-6 h-8 w-64" />
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <div className="flex gap-4">
+                  <Skeleton className="h-24 w-24 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-4 w-1/4" />
+                    <Skeleton className="h-5 w-1/3" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="lg:col-span-1">
+          <Skeleton className="h-80 w-full rounded-lg" />
+        </div>
+      </div>
+    </div>
+  );
+}

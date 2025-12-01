@@ -1,22 +1,28 @@
 {
-  "name": "auto-marketplace-app",
+  "name": "auto-marketplace",
   "version": "1.0.0",
-  "main": "index.ts",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
-  },
-  "dependencies": {
-    "expo": "~54.0.25",
-    "expo-status-bar": "~3.0.8",
-    "react": "19.1.0",
-    "react-native": "0.81.5"
+    "mobile": "npm run start --workspace=apps/mobile",
+    "mobile:ios": "npm run ios --workspace=apps/mobile",
+    "mobile:android": "npm run android --workspace=apps/mobile",
+    "api": "npm run start:dev --workspace=apps/api",
+    "api:build": "npm run build --workspace=apps/api",
+    "db:dev": "npx convex dev",
+    "db:push": "npx convex deploy",
+    "db:seed": "npx convex run seed:seedAllCategories",
+    "db:create-admin": "npx convex run seed:createInitialAdmin"
   },
   "devDependencies": {
-    "@types/react": "~19.1.0",
-    "typescript": "~5.9.2"
+    "convex": "^1.21.0",
+    "expo": "~54.0.25"
   },
-  "private": true
+  "packageManager": "npm@10.9.0",
+  "dependencies": {
+    "react-native-worklets": "^0.5.1"
+  }
 }
