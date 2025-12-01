@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView, Linking, Pressable } from 'react-native';
-import { Text, useTheme, List, Switch, Divider, Surface, RadioButton } from 'react-native-paper';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { Text, useTheme, Switch, Divider, Surface } from 'react-native-paper';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../types';
 import { useAppAuth } from '../../context/AuthProvider';

@@ -130,6 +130,7 @@ export function AIAssistantModal({
       checkConnection();
       loadQuickActions();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, currentScreen]);
 
   const checkConnection = async () => {
@@ -236,11 +237,9 @@ export function AIAssistantModal({
       case 'navigate':
         onClose();
         if (action.payload.screen) {
-          // Use type assertion to bypass TypeScript's strict navigate typing
-          navigation.navigate({
-            name: action.payload.screen as any,
-            params: undefined,
-          } as any);
+          // Navigate to the screen - cast to keyof RootStackParamList for type safety
+          const screenName = action.payload.screen as keyof RootStackParamList;
+          navigation.navigate(screenName as never);
         }
         break;
       case 'search':

@@ -1,4 +1,10 @@
-import { IsString, IsEnum, IsOptional, MaxLength, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class RephraseMessageDto {
@@ -8,7 +14,10 @@ export class RephraseMessageDto {
   @MaxLength(2000)
   message: string;
 
-  @ApiProperty({ description: 'Role of the sender', enum: ['buyer', 'seller', 'moderator'] })
+  @ApiProperty({
+    description: 'Role of the sender',
+    enum: ['buyer', 'seller', 'moderator'],
+  })
   @IsEnum(['buyer', 'seller', 'moderator'])
   senderRole: 'buyer' | 'seller' | 'moderator';
 
@@ -23,7 +32,9 @@ export class RephraseResponseDto {
   @ApiProperty({ description: 'Original message' })
   original: string;
 
-  @ApiProperty({ description: 'Rephrased message (same if already professional)' })
+  @ApiProperty({
+    description: 'Rephrased message (same if already professional)',
+  })
   rephrased: string;
 
   @ApiProperty({ description: 'Whether the original was professional' })
@@ -32,6 +43,9 @@ export class RephraseResponseDto {
   @ApiProperty({ description: 'Issues found in the message', type: [String] })
   issues: string[];
 
-  @ApiProperty({ description: 'Suggestions for better communication', type: [String] })
+  @ApiProperty({
+    description: 'Suggestions for better communication',
+    type: [String],
+  })
   suggestions: string[];
 }

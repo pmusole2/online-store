@@ -39,6 +39,8 @@ export default function ChatScreen({ route, navigation }: Props) {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
+    // Only scroll when message count changes, not on every message update
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages?.length]);
 
   // Reset rephrase result when message changes significantly
@@ -326,7 +328,7 @@ export default function ChatScreen({ route, navigation }: Props) {
 
             <Surface style={[styles.rephrasedText, { backgroundColor: theme.colors.surface }]}>
               <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
-                "{rephraseResult.rephrased}"
+                &quot;{rephraseResult.rephrased}&quot;
               </Text>
             </Surface>
 

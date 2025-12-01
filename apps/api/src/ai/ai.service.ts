@@ -12,12 +12,15 @@ export class AiService implements OnModuleInit {
   onModuleInit() {
     const apiKey = this.configService.get<string>('openai.apiKey');
     if (!apiKey) {
-      console.warn('OpenAI API key not configured. AI features will be disabled.');
+      console.warn(
+        'OpenAI API key not configured. AI features will be disabled.',
+      );
       return;
     }
 
     this.openai = new OpenAI({ apiKey });
-    this.model = this.configService.get<string>('openai.model') || 'gpt-4o-mini';
+    this.model =
+      this.configService.get<string>('openai.model') || 'gpt-4o-mini';
   }
 
   isConfigured(): boolean {
@@ -63,10 +66,7 @@ export class AiService implements OnModuleInit {
 
     const response = await this.openai.chat.completions.create({
       model: this.model,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...messages,
-      ],
+      messages: [{ role: 'system', content: systemPrompt }, ...messages],
       temperature: options?.temperature ?? 0.7,
       max_tokens: options?.maxTokens ?? 1000,
     });
@@ -83,7 +83,8 @@ export class AiService implements OnModuleInit {
     },
   ): Promise<T> {
     const response = await this.chat(
-      systemPrompt + '\n\nRespond ONLY with valid JSON, no markdown or explanation.',
+      systemPrompt +
+        '\n\nRespond ONLY with valid JSON, no markdown or explanation.',
       userMessage,
       options,
     );

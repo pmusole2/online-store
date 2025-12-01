@@ -48,7 +48,7 @@ export default function SellerProfileScreen({ route, navigation }: Props) {
     );
   }
 
-  const renderProduct = ({ item }: { item: Product }) => (
+  const _renderProduct = ({ item }: { item: Product }) => (
     <Card
       style={[styles.productCard, { backgroundColor: theme.colors.surface }]}
       onPress={() => handleProductPress(item._id)}

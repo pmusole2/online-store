@@ -1,4 +1,4 @@
-import { IsArray, IsNumber, IsOptional, IsString, Min, Max } from 'class-validator';
+import { IsNumber, IsOptional, IsString, Min, Max } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class GetRecommendationsDto {
@@ -6,7 +6,10 @@ export class GetRecommendationsDto {
   @IsString()
   userId: string;
 
-  @ApiPropertyOptional({ description: 'Maximum number of recommendations', default: 10 })
+  @ApiPropertyOptional({
+    description: 'Maximum number of recommendations',
+    default: 10,
+  })
   @IsOptional()
   @IsNumber()
   @Min(1)
@@ -19,7 +22,10 @@ export class GetSimilarProductsDto {
   @IsString()
   productId: string;
 
-  @ApiPropertyOptional({ description: 'Maximum number of similar products', default: 5 })
+  @ApiPropertyOptional({
+    description: 'Maximum number of similar products',
+    default: 5,
+  })
   @IsOptional()
   @IsNumber()
   @Min(1)

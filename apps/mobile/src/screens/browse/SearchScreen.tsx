@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, FlatList, Dimensions } from 'react-native';
 import { Text, Searchbar, useTheme, ActivityIndicator, Card, Chip, Menu, Button } from 'react-native-paper';
 import { useQuery } from 'convex/react';

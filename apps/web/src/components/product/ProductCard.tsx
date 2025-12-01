@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import Link from "next/link";
@@ -57,7 +58,7 @@ export function ProductCard({
     try {
       await toggleFavorite({ userId: user._id, productId: product._id });
       toast.success(isFavorited ? "Removed from favorites" : "Added to favorites");
-    } catch (error) {
+    } catch {
       toast.error("Failed to update favorites");
     }
   };

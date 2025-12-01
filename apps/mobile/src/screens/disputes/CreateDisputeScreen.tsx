@@ -139,10 +139,10 @@ export default function CreateDisputeScreen({ route, navigation }: Props) {
         {/* Category Selection */}
         <Animated.View entering={FadeInDown.delay(150).duration(400)}>
           <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
-            What's the issue?
+            What&apos;s the issue?
           </Text>
           <View style={styles.categoryGrid}>
-            {CATEGORIES.map((cat, index) => {
+            {CATEGORIES.map((cat, _index) => {
               const isSelected = category === cat.value;
               return (
                 <Pressable
@@ -254,7 +254,7 @@ export default function CreateDisputeScreen({ route, navigation }: Props) {
                 What happens next?
               </Text>
               <Text variant="bodySmall" style={{ color: theme.colors.onTertiaryContainer, marginTop: 4 }}>
-                After submitting, you'll be able to chat with the seller and upload evidence. A moderator may be assigned to help resolve the dispute.
+                After submitting, you&apos;ll be able to chat with the seller and upload evidence. A moderator may be assigned to help resolve the dispute.
               </Text>
             </View>
           </Surface>

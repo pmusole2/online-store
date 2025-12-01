@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useState } from "react";
@@ -12,7 +13,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -49,7 +49,6 @@ import {
   MessageSquare,
   Shield,
   Copy,
-  ExternalLink,
   Loader2,
 } from "lucide-react";
 import { ROUTES } from "@/lib/constants";

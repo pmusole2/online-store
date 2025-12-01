@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, FlatList, Pressable } from 'react-native';
 import { Text, Searchbar, useTheme, Chip, Surface } from 'react-native-paper';
-import Animated, { FadeIn, FadeInDown, FadeInRight, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeInRight, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useQuery } from 'convex/react';
 import { api } from '../../../../../convex/_generated/api';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';

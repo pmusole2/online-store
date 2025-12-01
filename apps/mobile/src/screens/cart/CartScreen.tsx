@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Pressable, Image } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Image } from 'react-native';
 import {
   Text,
   useTheme,
@@ -9,7 +9,6 @@ import {
   Surface,
 } from 'react-native-paper';
 import Animated, {
-  FadeIn,
   FadeInDown,
   FadeOutLeft,
   Layout,
@@ -48,7 +47,7 @@ interface CartItem {
 export default function CartScreen({ navigation }: Props) {
   const theme = useTheme();
   const { user } = useAppAuth();
-  const [loading, setLoading] = useState(false);
+  const [_loading, _setLoading] = useState(false);
 
   const cart = useQuery(
     api.cart.getCart,
@@ -113,7 +112,7 @@ export default function CartScreen({ navigation }: Props) {
   };
 
   // Get item count for header
-  const itemCount = cart?.items?.length || 0;
+  const _itemCount = cart?.items?.length || 0;
 
   // Loading state
   if (cart === undefined) {

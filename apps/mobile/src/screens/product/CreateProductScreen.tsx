@@ -357,7 +357,7 @@ export default function CreateProductScreen({ navigation }: Props) {
 
             {showCategoryPicker && (
               <Animated.View entering={FadeIn.duration(200)} style={styles.categoryList}>
-                {flatCategories.map((cat, index) => (
+                {flatCategories.map((cat, _index) => (
                   <Pressable
                   key={cat._id}
                     style={[

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useState } from "react";
@@ -35,7 +36,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -45,11 +45,8 @@ import {
   Edit,
   MoreHorizontal,
   ShoppingBag,
-  TrendingUp,
   DollarSign,
   Clock,
-  CheckCircle,
-  XCircle,
   AlertCircle,
 } from "lucide-react";
 import { ROUTES, CONDITION_DISPLAY_NAMES } from "@/lib/constants";

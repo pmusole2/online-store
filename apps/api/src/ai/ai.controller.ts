@@ -1,13 +1,36 @@
-import { Controller, Post, Body, Get, Query, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Query,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { RecommendationsService } from './services/recommendations.service';
 import { MessageRephraseService } from './services/message-rephrase.service';
 import { DisputeAnalysisService } from './services/dispute-analysis.service';
 import { ChatService } from './services/chat.service';
-import { GetRecommendationsDto, GetSimilarProductsDto, RecommendationsResponseDto } from './dto/recommendations.dto';
-import { RephraseMessageDto, RephraseResponseDto } from './dto/message-rephrase.dto';
-import { AnalyzeDisputeDto, GenerateResolutionMessageDto, DisputeAnalysisResponseDto } from './dto/dispute-analysis.dto';
-import { ChatRequestDto, ChatResponseDto, SuggestResponsesDto, QuickActionsDto } from './dto/chat.dto';
+import {
+  GetRecommendationsDto,
+  GetSimilarProductsDto,
+  RecommendationsResponseDto,
+} from './dto/recommendations.dto';
+import {
+  RephraseMessageDto,
+  RephraseResponseDto,
+} from './dto/message-rephrase.dto';
+import {
+  AnalyzeDisputeDto,
+  GenerateResolutionMessageDto,
+  DisputeAnalysisResponseDto,
+} from './dto/dispute-analysis.dto';
+import {
+  ChatRequestDto,
+  ChatResponseDto,
+  SuggestResponsesDto,
+} from './dto/chat.dto';
 import { ConvexService } from '../convex/convex.service';
 
 @ApiTags('AI')
@@ -22,7 +45,9 @@ export class AiController {
   ) {}
 
   @Post('recommendations')
-  @ApiOperation({ summary: 'Get personalized product recommendations for a user' })
+  @ApiOperation({
+    summary: 'Get personalized product recommendations for a user',
+  })
   @ApiResponse({ status: 200, type: RecommendationsResponseDto })
   async getRecommendations(
     @Body() dto: GetRecommendationsDto,
@@ -40,7 +65,7 @@ export class AiController {
 
       // Filter out the user's own products - don't recommend items they listed
       const otherUsersProducts = products.filter(
-        (p: { sellerId: string }) => p.sellerId !== dto.userId
+        (p: { sellerId: string }) => p.sellerId !== dto.userId,
       );
 
       const userContext = {
@@ -49,14 +74,23 @@ export class AiController {
         purchaseHistory: [], // TODO: Fetch from orders
       };
 
-      const formattedProducts = otherUsersProducts.map((p: { _id: string; title: string; categoryId: string; subcategoryId?: string; price: number; condition: string }) => ({
-        id: p._id,
-        title: p.title,
-        category: p.categoryId,
-        subcategory: p.subcategoryId,
-        price: p.price,
-        condition: p.condition,
-      }));
+      const formattedProducts = otherUsersProducts.map(
+        (p: {
+          _id: string;
+          title: string;
+          categoryId: string;
+          subcategoryId?: string;
+          price: number;
+          condition: string;
+        }) => ({
+          id: p._id,
+          title: p.title,
+          category: p.categoryId,
+          subcategory: p.subcategoryId,
+          price: p.price,
+          condition: p.condition,
+        }),
+      );
 
       return await this.recommendationsService.getPersonalizedRecommendations(
         userContext,
@@ -121,20 +155,19 @@ export class AiController {
   }
 
   @Post('rephrase-message')
-  @ApiOperation({ summary: 'Analyze and rephrase a message for professionalism' })
+  @ApiOperation({
+    summary: 'Analyze and rephrase a message for professionalism',
+  })
   @ApiResponse({ status: 200, type: RephraseResponseDto })
   async rephraseMessage(
     @Body() dto: RephraseMessageDto,
   ): Promise<RephraseResponseDto> {
     try {
-      return await this.messageRephraseService.analyzeAndRephrase(
-        dto.message,
-        {
-          senderRole: dto.senderRole,
-          disputeContext: dto.disputeContext,
-        },
-      );
-    } catch (error) {
+      return await this.messageRephraseService.analyzeAndRephrase(dto.message, {
+        senderRole: dto.senderRole,
+        disputeContext: dto.disputeContext,
+      });
+    } catch {
       throw new HttpException(
         'Failed to analyze message',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -143,14 +176,18 @@ export class AiController {
   }
 
   @Post('analyze-dispute')
-  @ApiOperation({ summary: 'Analyze a dispute and provide resolution suggestions' })
+  @ApiOperation({
+    summary: 'Analyze a dispute and provide resolution suggestions',
+  })
   @ApiResponse({ status: 200, type: DisputeAnalysisResponseDto })
   async analyzeDispute(
     @Body() dto: AnalyzeDisputeDto,
   ): Promise<DisputeAnalysisResponseDto> {
     try {
       // Fetch dispute data from Convex
-      const disputeData = await this.convexService.getDisputeForAnalysis(dto.disputeId);
+      const disputeData = await this.convexService.getDisputeForAnalysis(
+        dto.disputeId,
+      );
 
       if (!disputeData) {
         throw new HttpException('Dispute not found', HttpStatus.NOT_FOUND);
@@ -159,9 +196,15 @@ export class AiController {
       const dispute = {
         title: disputeData.dispute.title,
         description: disputeData.dispute.description,
-        category: disputeData.dispute.category as 'not_received' | 'defective' | 'not_as_described' | 'other',
+        category: disputeData.dispute.category as
+          | 'not_received'
+          | 'defective'
+          | 'not_as_described'
+          | 'other',
         orderAmount: disputeData.order?.totalAmount || 0,
-        orderDate: new Date(disputeData.order?.createdAt || Date.now()).toISOString(),
+        orderDate: new Date(
+          disputeData.order?.createdAt || Date.now(),
+        ).toISOString(),
         productTitle: disputeData.order?.items?.[0]?.title || 'Unknown Product',
       };
 
@@ -190,10 +233,11 @@ export class AiController {
 
       if (productId && buyerId) {
         try {
-          const prePurchaseHistory = await this.convexService.getProductConversationHistory(
-            productId,
-            buyerId,
-          );
+          const prePurchaseHistory =
+            await this.convexService.getProductConversationHistory(
+              productId,
+              buyerId,
+            );
 
           if (prePurchaseHistory && prePurchaseHistory.messages) {
             prePurchaseConversation = prePurchaseHistory.messages.map((m) => ({
@@ -220,7 +264,7 @@ export class AiController {
       await this.convexService.updateDisputeAiAnalysis(
         dto.disputeId,
         analysis.summary,
-        analysis.suggestedResolutions.map(r => r.description),
+        analysis.suggestedResolutions.map((r) => r.description),
       );
 
       return analysis;
@@ -240,21 +284,22 @@ export class AiController {
     @Body() dto: GenerateResolutionMessageDto,
   ): Promise<{ message: string }> {
     try {
-      const message = await this.disputeAnalysisService.suggestResolutionMessage(
-        dto.resolutionType,
-        {
-          title: dto.disputeTitle,
-          description: '',
-          category: dto.category,
-          orderAmount: dto.orderAmount,
-          orderDate: new Date().toISOString(),
-          productTitle: dto.productTitle,
-        },
-        dto.refundAmount,
-      );
+      const message =
+        await this.disputeAnalysisService.suggestResolutionMessage(
+          dto.resolutionType,
+          {
+            title: dto.disputeTitle,
+            description: '',
+            category: dto.category,
+            orderAmount: dto.orderAmount,
+            orderDate: new Date().toISOString(),
+            productTitle: dto.productTitle,
+          },
+          dto.refundAmount,
+        );
 
       return { message };
-    } catch (error) {
+    } catch {
       throw new HttpException(
         'Failed to generate resolution message',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -265,16 +310,14 @@ export class AiController {
   @Post('chat')
   @ApiOperation({ summary: 'General AI chat for the shopping assistant' })
   @ApiResponse({ status: 200, type: ChatResponseDto })
-  async chat(
-    @Body() dto: ChatRequestDto,
-  ): Promise<ChatResponseDto> {
+  async chat(@Body() dto: ChatRequestDto): Promise<ChatResponseDto> {
     try {
       return await this.chatService.chat(
         dto.message,
         dto.conversationHistory || [],
         dto.context || {},
       );
-    } catch (error) {
+    } catch {
       throw new HttpException(
         'Failed to process chat message',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -283,21 +326,21 @@ export class AiController {
   }
 
   @Post('suggest-responses')
-  @ApiOperation({ summary: 'Get response suggestions for dispute conversations' })
+  @ApiOperation({
+    summary: 'Get response suggestions for dispute conversations',
+  })
   @ApiResponse({ status: 200, type: [String] })
-  async suggestResponses(
-    @Body() dto: SuggestResponsesDto,
-  ): Promise<string[]> {
+  async suggestResponses(@Body() dto: SuggestResponsesDto): Promise<string[]> {
     try {
       return await this.messageRephraseService.suggestResponse(
-        dto.conversationHistory.map(m => ({
+        dto.conversationHistory.map((m) => ({
           sender: m.sender as 'buyer' | 'seller' | 'moderator',
           message: m.message,
         })),
         dto.respondAs,
         dto.disputeContext,
       );
-    } catch (error) {
+    } catch {
       throw new HttpException(
         'Failed to generate response suggestions',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -306,7 +349,9 @@ export class AiController {
   }
 
   @Get('quick-actions')
-  @ApiOperation({ summary: 'Get quick action suggestions based on current screen' })
+  @ApiOperation({
+    summary: 'Get quick action suggestions based on current screen',
+  })
   @ApiResponse({ status: 200, type: [String] })
   async getQuickActions(
     @Query('currentScreen') currentScreen: string,

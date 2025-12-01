@@ -69,6 +69,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         saveLocalThemePreference(serverTheme);
       }
     }
+    // Intentionally not including themeMode to avoid infinite loop - we only want to sync when user prefs change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, userPreferences]);
 
   const loadLocalThemePreference = async () => {
@@ -116,16 +118,16 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     }
   }, [user, updateThemeModeMutation]);
 
-  // Toggle between light and dark (skipping system)
-  const toggleTheme = useCallback(() => {
-    const newMode = isDark ? 'light' : 'dark';
-    setThemeMode(newMode);
-  }, [setThemeMode]);
-
   // Determine if dark mode should be active
   const isDark = themeMode === 'system'
     ? systemColorScheme === 'dark'
     : themeMode === 'dark';
+
+  // Toggle between light and dark (skipping system)
+  const toggleTheme = useCallback(() => {
+    const newMode = isDark ? 'light' : 'dark';
+    setThemeMode(newMode);
+  }, [isDark, setThemeMode]);
 
   const value: ThemeContextType = {
     themeMode,

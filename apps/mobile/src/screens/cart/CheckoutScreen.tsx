@@ -100,7 +100,7 @@ export default function CheckoutScreen({ navigation }: Props) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('mobile_money');
   const [mobileNumber, setMobileNumber] = useState(user?.phone || '');
   const [mobileProvider, setMobileProvider] = useState<MobileMoneyProvider | null>(null);
-  const [showProviderModal, setShowProviderModal] = useState(false);
+  const [_showProviderModal, _setShowProviderModal] = useState(false);
   const [showFeeInfo, setShowFeeInfo] = useState(false);
 
   // Check if wallet has sufficient balance
@@ -113,7 +113,7 @@ export default function CheckoutScreen({ navigation }: Props) {
     isLoading: paymentLoading,
     isPending: paymentPending,
     status: paymentStatus,
-    error: paymentError,
+    error: _paymentError,
     payWithMobileMoney,
     payWithCard,
   } = usePayment({

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../../convex/_generated/api";
@@ -14,7 +13,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -30,7 +28,6 @@ import {
   TrendingUp,
   Clock,
   CheckCircle,
-  XCircle,
   AlertTriangle,
   Plus,
   Minus,
@@ -39,7 +36,7 @@ import {
 import { ROUTES } from "@/lib/constants";
 import { formatZMW } from "@auto-marketplace/shared";
 import { useAuth } from "@/hooks/useAuth";
-import { formatDistanceToNow, format } from "date-fns";
+import { format } from "date-fns";
 
 type TransactionType = "credit" | "debit" | "hold" | "release" | "refund";
 type TransactionStatus = "pending" | "completed" | "failed" | "cancelled";

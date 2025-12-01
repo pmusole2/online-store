@@ -1,6 +1,5 @@
-import { IsString, IsEnum, IsNumber, IsOptional, IsArray, ValidateNested, Min } from 'class-validator';
+import { IsString, IsEnum, IsNumber, IsOptional, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
 
 export class ConversationMessageDto {
   @ApiProperty({ enum: ['buyer', 'seller', 'moderator'] })
@@ -25,7 +24,10 @@ export class AnalyzeDisputeDto {
   @IsString()
   viewerId: string;
 
-  @ApiProperty({ description: 'Role of the viewer in the dispute', enum: ['buyer', 'seller', 'moderator'] })
+  @ApiProperty({
+    description: 'Role of the viewer in the dispute',
+    enum: ['buyer', 'seller', 'moderator'],
+  })
   @IsEnum(['buyer', 'seller', 'moderator'])
   viewerRole: 'buyer' | 'seller' | 'moderator';
 }
@@ -39,7 +41,9 @@ export class GenerateResolutionMessageDto {
   @IsString()
   disputeTitle: string;
 
-  @ApiProperty({ enum: ['not_received', 'defective', 'not_as_described', 'other'] })
+  @ApiProperty({
+    enum: ['not_received', 'defective', 'not_as_described', 'other'],
+  })
   @IsEnum(['not_received', 'defective', 'not_as_described', 'other'])
   category: 'not_received' | 'defective' | 'not_as_described' | 'other';
 
@@ -60,8 +64,21 @@ export class GenerateResolutionMessageDto {
 }
 
 export class SuggestedResolutionDto {
-  @ApiProperty({ enum: ['full_refund', 'partial_refund', 'no_refund', 'replacement', 'mutual_agreement'] })
-  type: 'full_refund' | 'partial_refund' | 'no_refund' | 'replacement' | 'mutual_agreement';
+  @ApiProperty({
+    enum: [
+      'full_refund',
+      'partial_refund',
+      'no_refund',
+      'replacement',
+      'mutual_agreement',
+    ],
+  })
+  type:
+    | 'full_refund'
+    | 'partial_refund'
+    | 'no_refund'
+    | 'replacement'
+    | 'mutual_agreement';
 
   @ApiProperty()
   description: string;
@@ -76,15 +93,15 @@ export class DisputeAnalysisResponseDto {
 
   @ApiProperty({ description: 'Personalized key points based on viewer role' })
   keyPoints: {
-    yourClaims: string[];      // The viewer's claims (personalized)
-    theirClaims: string[];     // The other party's claims (personalized)
-    buyerClaims: string[];     // Original buyer claims (for reference)
-    sellerClaims: string[];    // Original seller claims (for reference)
+    yourClaims: string[]; // The viewer's claims (personalized)
+    theirClaims: string[]; // The other party's claims (personalized)
+    buyerClaims: string[]; // Original buyer claims (for reference)
+    sellerClaims: string[]; // Original seller claims (for reference)
   };
 
   @ApiProperty()
   sentiment: {
-    yours: 'cooperative' | 'frustrated' | 'hostile' | 'neutral';  // Viewer's sentiment
+    yours: 'cooperative' | 'frustrated' | 'hostile' | 'neutral'; // Viewer's sentiment
     theirs: 'cooperative' | 'frustrated' | 'hostile' | 'neutral'; // Other party's sentiment
     buyer: 'cooperative' | 'frustrated' | 'hostile' | 'neutral';
     seller: 'cooperative' | 'frustrated' | 'hostile' | 'neutral';
@@ -102,6 +119,8 @@ export class DisputeAnalysisResponseDto {
   @ApiProperty()
   additionalNotes: string;
 
-  @ApiProperty({ description: 'Role of the viewer who requested this analysis' })
+  @ApiProperty({
+    description: 'Role of the viewer who requested this analysis',
+  })
   viewerRole: 'buyer' | 'seller' | 'moderator';
 }

@@ -35,7 +35,7 @@ interface HeaderAction {
   disabled?: boolean;
 }
 
-interface HeaderProps {
+interface _HeaderProps {
   title?: string;
   subtitle?: string;
   variant?: HeaderVariant;
@@ -520,10 +520,10 @@ export function SearchHeader({
   placeholder = 'Search...',
   value,
   onChangeText,
-  onSubmit,
+  onSubmit: _onSubmit,
   onBackPress,
   showBackButton = true,
-  autoFocus = false,
+  autoFocus: _autoFocus = false,
   style,
 }: SearchHeaderProps) {
   const theme = useTheme();

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useState } from "react";
@@ -39,7 +40,6 @@ import {
   Star,
   ChevronLeft,
   ChevronRight,
-  Truck,
   Package,
 } from "lucide-react";
 import { ROUTES, CONDITION_DISPLAY_NAMES } from "@/lib/constants";
@@ -87,7 +87,6 @@ export default function ProductDetailPage() {
   // Mutations
   const toggleFavorite = useMutation(api.favorites.toggleFavorite);
   const addToCart = useMutation(api.cart.addToCart);
-  const incrementViews = useMutation(api.products.incrementViews);
 
   // Increment views on mount
   // useEffect(() => {
@@ -107,7 +106,7 @@ export default function ProductDetailPage() {
       toast.success(
         isFavorited ? "Removed from favorites" : "Added to favorites"
       );
-    } catch (error) {
+    } catch {
       toast.error("Failed to update favorites");
     }
   };
@@ -138,7 +137,7 @@ export default function ProductDetailPage() {
         },
       });
       toast.success("Added to cart!");
-    } catch (error) {
+    } catch {
       toast.error("Failed to add to cart");
     }
   };

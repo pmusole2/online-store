@@ -84,7 +84,6 @@ export function useWallet(): UseWalletReturn {
 
   // Convex mutations
   const ensureWalletMutation = useMutation(api.wallet.ensureWallet);
-  const debitWalletMutation = useMutation(api.wallet.debitWallet);
 
   // Sync Convex data to local state
   useEffect(() => {

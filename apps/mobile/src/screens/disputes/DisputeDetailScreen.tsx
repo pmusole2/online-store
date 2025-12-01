@@ -605,7 +605,7 @@ export default function DisputeDetailScreen({ route, navigation }: Props) {
           <Dialog.Title>Resolve Dispute</Dialog.Title>
           <Dialog.Content>
             <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, marginBottom: 16 }}>
-              If you've reached an agreement with the seller, you can resolve this dispute:
+              If you&apos;ve reached an agreement with the seller, you can resolve this dispute:
             </Text>
 
             <Pressable

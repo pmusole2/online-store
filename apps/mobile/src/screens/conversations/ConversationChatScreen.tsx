@@ -132,7 +132,7 @@ function MessageBubble({
 
 export default function ConversationChatScreen({ route, navigation }: Props) {
   const theme = useTheme() as MD3Theme;
-  const { conversationId, productId } = route.params;
+  const { conversationId, productId: _productId } = route.params;
   const { user } = useAppAuth();
   const flatListRef = useRef<FlatList>(null);
 
@@ -166,6 +166,8 @@ export default function ConversationChatScreen({ route, navigation }: Props) {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
+    // Only scroll when message count changes, not on every message update
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages?.length]);
 
   const handleSend = async () => {

@@ -15,7 +15,7 @@ import { useAppAuth } from '../../context/AuthProvider';
 import { useAIRecommendations } from '../../hooks/useAIRecommendations';
 import type { CategoryTreeItem, RootStackParamList } from '../../types';
 
-const { width } = Dimensions.get('window');
+const { width: _width } = Dimensions.get('window');
 
 interface Notification {
   isRead: boolean;

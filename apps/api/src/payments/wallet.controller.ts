@@ -75,7 +75,8 @@ export class WalletController {
     @Param('userId') userId: string,
   ): Promise<Array<Record<string, unknown>>> {
     try {
-      const transactions = await this.convexService.getWalletTransactions(userId);
+      const transactions =
+        await this.convexService.getWalletTransactions(userId);
       return transactions;
     } catch (error) {
       console.error('Failed to get wallet transactions:', error);
@@ -126,12 +127,16 @@ export class WalletController {
         userId: dto.userId,
         amount: dto.amount,
         source: 'withdrawal_mobile_money',
-        description: dto.description || `Withdrawal to ${dto.provider.toUpperCase()} ${dto.phone}`,
+        description:
+          dto.description ||
+          `Withdrawal to ${dto.provider.toUpperCase()} ${dto.phone}`,
         externalReference: reference,
       });
 
       try {
-        console.log(`💳 [Withdrawal] Initiating Lenco mobile money transfer for ${reference}`);
+        console.log(
+          `💳 [Withdrawal] Initiating Lenco mobile money transfer for ${reference}`,
+        );
         console.log(`💳 [Withdrawal] Request:`, {
           phone: dto.phone,
           operator: dto.provider,
@@ -159,12 +164,17 @@ export class WalletController {
           lencoResponse.data.id,
         );
 
-        console.log(`✅ [Withdrawal] Transaction updated with Lenco ID: ${lencoResponse.data.id}`);
+        console.log(
+          `✅ [Withdrawal] Transaction updated with Lenco ID: ${lencoResponse.data.id}`,
+        );
 
         return {
           success: true,
           reference: debitResult.reference,
-          status: lencoResponse.data.status === 'successful' ? 'completed' : 'pending',
+          status:
+            lencoResponse.data.status === 'successful'
+              ? 'completed'
+              : 'pending',
           message: 'Withdrawal initiated successfully',
           transactionId: lencoResponse.data.id,
           newBalance: debitResult.newBalance,
@@ -173,7 +183,10 @@ export class WalletController {
         // Lenco transfer failed - reverse the wallet debit
         console.error('❌ [Withdrawal] Lenco transfer failed:', lencoError);
         console.error('❌ [Withdrawal] Error details:', {
-          message: lencoError instanceof Error ? lencoError.message : String(lencoError),
+          message:
+            lencoError instanceof Error
+              ? lencoError.message
+              : String(lencoError),
           stack: lencoError instanceof Error ? lencoError.stack : undefined,
         });
 
@@ -181,11 +194,18 @@ export class WalletController {
           await this.convexService.updateWalletWithdrawalStatus(
             debitResult.reference,
             'failed',
-            lencoError instanceof Error ? lencoError.message : 'Transfer failed',
+            lencoError instanceof Error
+              ? lencoError.message
+              : 'Transfer failed',
           );
-          console.log(`✅ [Withdrawal] Transaction marked as failed and funds reversed`);
+          console.log(
+            `✅ [Withdrawal] Transaction marked as failed and funds reversed`,
+          );
         } catch (updateError) {
-          console.error('❌ [Withdrawal] Failed to update transaction status:', updateError);
+          console.error(
+            '❌ [Withdrawal] Failed to update transaction status:',
+            updateError,
+          );
         }
 
         throw new HttpException(
@@ -244,12 +264,15 @@ export class WalletController {
         amount: dto.amount,
         source: 'withdrawal_bank',
         description:
-          dto.description || `Withdrawal to bank account ${dto.accountNumber.slice(-4)}`,
+          dto.description ||
+          `Withdrawal to bank account ${dto.accountNumber.slice(-4)}`,
         externalReference: reference,
       });
 
       try {
-        console.log(`💳 [Withdrawal] Initiating Lenco bank transfer for ${reference}`);
+        console.log(
+          `💳 [Withdrawal] Initiating Lenco bank transfer for ${reference}`,
+        );
         console.log(`💳 [Withdrawal] Request:`, {
           bankCode: dto.bankCode,
           accountNumber: '****' + dto.accountNumber.slice(-4),
@@ -279,21 +302,32 @@ export class WalletController {
           lencoResponse.data.id,
         );
 
-        console.log(`✅ [Withdrawal] Transaction updated with Lenco ID: ${lencoResponse.data.id}`);
+        console.log(
+          `✅ [Withdrawal] Transaction updated with Lenco ID: ${lencoResponse.data.id}`,
+        );
 
         return {
           success: true,
           reference: debitResult.reference,
-          status: lencoResponse.data.status === 'successful' ? 'completed' : 'pending',
+          status:
+            lencoResponse.data.status === 'successful'
+              ? 'completed'
+              : 'pending',
           message: 'Withdrawal initiated successfully',
           transactionId: lencoResponse.data.id,
           newBalance: debitResult.newBalance,
         };
       } catch (lencoError) {
         // Lenco transfer failed - reverse the wallet debit
-        console.error('❌ [Withdrawal] Lenco bank transfer failed:', lencoError);
+        console.error(
+          '❌ [Withdrawal] Lenco bank transfer failed:',
+          lencoError,
+        );
         console.error('❌ [Withdrawal] Error details:', {
-          message: lencoError instanceof Error ? lencoError.message : String(lencoError),
+          message:
+            lencoError instanceof Error
+              ? lencoError.message
+              : String(lencoError),
           stack: lencoError instanceof Error ? lencoError.stack : undefined,
         });
 
@@ -301,11 +335,18 @@ export class WalletController {
           await this.convexService.updateWalletWithdrawalStatus(
             debitResult.reference,
             'failed',
-            lencoError instanceof Error ? lencoError.message : 'Transfer failed',
+            lencoError instanceof Error
+              ? lencoError.message
+              : 'Transfer failed',
           );
-          console.log(`✅ [Withdrawal] Transaction marked as failed and funds reversed`);
+          console.log(
+            `✅ [Withdrawal] Transaction marked as failed and funds reversed`,
+          );
         } catch (updateError) {
-          console.error('❌ [Withdrawal] Failed to update transaction status:', updateError);
+          console.error(
+            '❌ [Withdrawal] Failed to update transaction status:',
+            updateError,
+          );
         }
 
         throw new HttpException(
@@ -383,7 +424,10 @@ export class WalletController {
       } else {
         // Card top-up - redirect to checkout
         if (!dto.email) {
-          throw new HttpException('Email is required for card payments', HttpStatus.BAD_REQUEST);
+          throw new HttpException(
+            'Email is required for card payments',
+            HttpStatus.BAD_REQUEST,
+          );
         }
 
         const lencoResponse = await this.lencoService.collectCard({
@@ -414,7 +458,10 @@ export class WalletController {
     } catch (error) {
       if (error instanceof HttpException) throw error;
       console.error('Top-up failed:', error);
-      throw new HttpException('Top-up failed', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        'Top-up failed',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -461,7 +508,10 @@ export class WalletController {
       });
 
       // Mark order as paid (using wallet)
-      await this.convexService.markOrderPaidByWallet(dto.orderId, result.reference);
+      await this.convexService.markOrderPaidByWallet(
+        dto.orderId,
+        result.reference,
+      );
 
       return {
         success: true,

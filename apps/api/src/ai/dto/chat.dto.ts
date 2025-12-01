@@ -1,5 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsArray, ValidateNested, IsIn } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsArray,
+  ValidateNested,
+  IsIn,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 class ChatMessageDto {
@@ -39,14 +45,20 @@ export class ChatRequestDto {
   @IsString()
   message: string;
 
-  @ApiPropertyOptional({ type: [ChatMessageDto], description: 'Previous conversation messages' })
+  @ApiPropertyOptional({
+    type: [ChatMessageDto],
+    description: 'Previous conversation messages',
+  })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ChatMessageDto)
   conversationHistory?: ChatMessageDto[];
 
-  @ApiPropertyOptional({ type: ChatContextDto, description: 'Context about the current state' })
+  @ApiPropertyOptional({
+    type: ChatContextDto,
+    description: 'Context about the current state',
+  })
   @IsOptional()
   @ValidateNested()
   @Type(() => ChatContextDto)
@@ -68,10 +80,16 @@ export class ChatResponseDto {
   @ApiProperty({ description: 'The AI response message' })
   message: string;
 
-  @ApiPropertyOptional({ type: [String], description: 'Suggested follow-up messages' })
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Suggested follow-up messages',
+  })
   suggestions?: string[];
 
-  @ApiPropertyOptional({ type: [ChatActionDto], description: 'Suggested actions' })
+  @ApiPropertyOptional({
+    type: [ChatActionDto],
+    description: 'Suggested actions',
+  })
   actions?: ChatActionDto[];
 }
 

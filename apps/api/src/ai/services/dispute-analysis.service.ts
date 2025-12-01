@@ -33,7 +33,12 @@ interface DisputeAnalysis {
     seller: 'cooperative' | 'frustrated' | 'hostile' | 'neutral';
   };
   suggestedResolutions: Array<{
-    type: 'full_refund' | 'partial_refund' | 'no_refund' | 'replacement' | 'mutual_agreement';
+    type:
+      | 'full_refund'
+      | 'partial_refund'
+      | 'no_refund'
+      | 'replacement'
+      | 'mutual_agreement';
     description: string;
     fairnessScore: number; // 1-10
   }>;
@@ -52,7 +57,11 @@ export class DisputeAnalysisService {
     conversation: ConversationMessage[],
     evidenceCount: number,
     viewerRole: ViewerRole = 'moderator',
-    prePurchaseConversation?: Array<{ sender: 'buyer' | 'seller'; message: string; timestamp: string }>,
+    prePurchaseConversation?: Array<{
+      sender: 'buyer' | 'seller';
+      message: string;
+      timestamp: string;
+    }>,
   ): Promise<DisputeAnalysis> {
     if (!this.aiService.isConfigured()) {
       return this.getDefaultAnalysis(dispute, viewerRole);
@@ -99,11 +108,14 @@ Return a JSON object with:
       .join('\n');
 
     // Format pre-purchase conversation if available
-    const prePurchaseText = prePurchaseConversation && prePurchaseConversation.length > 0
-      ? prePurchaseConversation
-          .map((m) => `[${m.timestamp}] ${m.sender.toUpperCase()}: ${m.message}`)
-          .join('\n')
-      : null;
+    const prePurchaseText =
+      prePurchaseConversation && prePurchaseConversation.length > 0
+        ? prePurchaseConversation
+            .map(
+              (m) => `[${m.timestamp}] ${m.sender.toUpperCase()}: ${m.message}`,
+            )
+            .join('\n')
+        : null;
 
     const userMessage = `DISPUTE DETAILS:
 - Title: ${dispute.title}
@@ -113,12 +125,16 @@ Return a JSON object with:
 - Order Amount: K${dispute.orderAmount}
 - Order Date: ${dispute.orderDate}
 - Evidence Items: ${evidenceCount}
-${prePurchaseText ? `
+${
+  prePurchaseText
+    ? `
 PRE-PURCHASE CONVERSATION (messages before the sale):
 ${prePurchaseText}
 
 This shows the communication between buyer and seller BEFORE the purchase was made.
-` : ''}
+`
+    : ''
+}
 DISPUTE CONVERSATION HISTORY:
 ${conversationText || 'No messages yet'}
 
@@ -136,7 +152,12 @@ Please provide a comprehensive analysis.`;
           theirs?: 'cooperative' | 'frustrated' | 'hostile' | 'neutral';
         };
         suggestedResolutions?: Array<{
-          type: 'full_refund' | 'partial_refund' | 'no_refund' | 'replacement' | 'mutual_agreement';
+          type:
+            | 'full_refund'
+            | 'partial_refund'
+            | 'no_refund'
+            | 'replacement'
+            | 'mutual_agreement';
           description: string;
           fairnessScore: number;
         }>;
@@ -167,8 +188,14 @@ Please provide a comprehensive analysis.`;
         sentiment: {
           yours: result.sentiment?.yours || 'neutral',
           theirs: result.sentiment?.theirs || 'neutral',
-          buyer: viewerRole === 'buyer' ? (result.sentiment?.yours || 'neutral') : (result.sentiment?.theirs || 'neutral'),
-          seller: viewerRole === 'seller' ? (result.sentiment?.yours || 'neutral') : (result.sentiment?.theirs || 'neutral'),
+          buyer:
+            viewerRole === 'buyer'
+              ? result.sentiment?.yours || 'neutral'
+              : result.sentiment?.theirs || 'neutral',
+          seller:
+            viewerRole === 'seller'
+              ? result.sentiment?.yours || 'neutral'
+              : result.sentiment?.theirs || 'neutral',
         },
         suggestedResolutions: result.suggestedResolutions || [],
         recommendedAction: result.recommendedAction || 'Review case details',
@@ -189,19 +216,25 @@ Please provide a comprehensive analysis.`;
     switch (viewerRole) {
       case 'buyer':
         return {
-          roleDescription: 'You are helping a BUYER understand their dispute situation. Speak directly to them as if having a conversation.',
-          toneGuideline: 'Be empathetic to the buyer\'s concerns while remaining fair and objective',
+          roleDescription:
+            'You are helping a BUYER understand their dispute situation. Speak directly to them as if having a conversation.',
+          toneGuideline:
+            "Be empathetic to the buyer's concerns while remaining fair and objective",
         };
       case 'seller':
         return {
-          roleDescription: 'You are helping a SELLER understand their dispute situation. Speak directly to them as if having a conversation.',
-          toneGuideline: 'Be understanding of the seller\'s position while acknowledging the buyer\'s concerns',
+          roleDescription:
+            'You are helping a SELLER understand their dispute situation. Speak directly to them as if having a conversation.',
+          toneGuideline:
+            "Be understanding of the seller's position while acknowledging the buyer's concerns",
         };
       case 'moderator':
       default:
         return {
-          roleDescription: 'You are providing an objective analysis for a marketplace moderator reviewing this dispute.',
-          toneGuideline: 'Be impartial - consider both buyer and seller perspectives equally',
+          roleDescription:
+            'You are providing an objective analysis for a marketplace moderator reviewing this dispute.',
+          toneGuideline:
+            'Be impartial - consider both buyer and seller perspectives equally',
         };
     }
   }
@@ -240,11 +273,10 @@ Buyer Sentiment: ${analysis.sentiment.buyer}
 Seller Sentiment: ${analysis.sentiment.seller}`;
 
     try {
-      return await this.aiService.chat(
-        systemPrompt,
-        userMessage,
-        { temperature: 0.3, maxTokens: 800 },
-      );
+      return await this.aiService.chat(systemPrompt, userMessage, {
+        temperature: 0.3,
+        maxTokens: 800,
+      });
     } catch {
       return this.getDefaultBrief(dispute, analysis);
     }
@@ -256,7 +288,11 @@ Seller Sentiment: ${analysis.sentiment.seller}`;
     refundAmount?: number,
   ): Promise<string> {
     if (!this.aiService.isConfigured()) {
-      return this.getDefaultResolutionMessage(resolutionType, dispute, refundAmount);
+      return this.getDefaultResolutionMessage(
+        resolutionType,
+        dispute,
+        refundAmount,
+      );
     }
 
     const systemPrompt = `Write a professional, empathetic resolution message for a marketplace dispute.
@@ -285,17 +321,23 @@ Product: ${dispute.productTitle}
 Original Amount: K${dispute.orderAmount}`;
 
     try {
-      return await this.aiService.chat(
-        systemPrompt,
-        userMessage,
-        { temperature: 0.5, maxTokens: 500 },
-      );
+      return await this.aiService.chat(systemPrompt, userMessage, {
+        temperature: 0.5,
+        maxTokens: 500,
+      });
     } catch {
-      return this.getDefaultResolutionMessage(resolutionType, dispute, refundAmount);
+      return this.getDefaultResolutionMessage(
+        resolutionType,
+        dispute,
+        refundAmount,
+      );
     }
   }
 
-  private getDefaultAnalysis(dispute: DisputeDetails, viewerRole: ViewerRole = 'moderator'): DisputeAnalysis {
+  private getDefaultAnalysis(
+    dispute: DisputeDetails,
+    viewerRole: ViewerRole = 'moderator',
+  ): DisputeAnalysis {
     const isBuyer = viewerRole === 'buyer';
     const isSeller = viewerRole === 'seller';
 
@@ -311,11 +353,12 @@ Original Amount: K${dispute.orderAmount}`;
         ? [dispute.description]
         : ['Awaiting seller response'];
 
-    const summary = viewerRole === 'moderator'
-      ? `Dispute regarding "${dispute.productTitle}" - ${dispute.category.replace('_', ' ')}. Review required.`
-      : isBuyer
-        ? `Your dispute regarding "${dispute.productTitle}" is under review. Here's a summary of the situation.`
-        : `A dispute has been raised regarding "${dispute.productTitle}". Here's what you need to know.`;
+    const summary =
+      viewerRole === 'moderator'
+        ? `Dispute regarding "${dispute.productTitle}" - ${dispute.category.replace('_', ' ')}. Review required.`
+        : isBuyer
+          ? `Your dispute regarding "${dispute.productTitle}" is under review. Here's a summary of the situation.`
+          : `A dispute has been raised regarding "${dispute.productTitle}". Here's what you need to know.`;
 
     return {
       summary,
@@ -334,22 +377,27 @@ Original Amount: K${dispute.orderAmount}`;
       suggestedResolutions: [
         {
           type: 'mutual_agreement',
-          description: viewerRole === 'moderator'
-            ? 'Encourage both parties to reach an agreement'
-            : 'Try to reach an agreement with the other party through the chat',
+          description:
+            viewerRole === 'moderator'
+              ? 'Encourage both parties to reach an agreement'
+              : 'Try to reach an agreement with the other party through the chat',
           fairnessScore: 7,
         },
       ],
-      recommendedAction: viewerRole === 'moderator'
-        ? 'Review evidence and conversation before deciding'
-        : 'Review the conversation and consider responding to move towards a resolution',
+      recommendedAction:
+        viewerRole === 'moderator'
+          ? 'Review evidence and conversation before deciding'
+          : 'Review the conversation and consider responding to move towards a resolution',
       riskLevel: 'medium',
       additionalNotes: 'AI analysis unavailable - manual review required',
       viewerRole,
     };
   }
 
-  private getDefaultBrief(dispute: DisputeDetails, analysis: DisputeAnalysis): string {
+  private getDefaultBrief(
+    dispute: DisputeDetails,
+    analysis: DisputeAnalysis,
+  ): string {
     return `
 ## Moderator Brief
 
@@ -377,9 +425,10 @@ ${analysis.riskLevel.toUpperCase()}
     dispute: DisputeDetails,
     refundAmount?: number,
   ): string {
-    const amount = resolutionType === 'full_refund'
-      ? dispute.orderAmount
-      : refundAmount || 0;
+    const amount =
+      resolutionType === 'full_refund'
+        ? dispute.orderAmount
+        : refundAmount || 0;
 
     if (resolutionType === 'no_refund') {
       return `Dear Buyer and Seller,

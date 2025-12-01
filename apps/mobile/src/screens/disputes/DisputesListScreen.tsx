@@ -46,7 +46,7 @@ const statusLabels: Record<DisputeStatus, string> = {
   closed: 'Closed',
 };
 
-const categoryLabels: Record<DisputeCategory, string> = {
+const _categoryLabels: Record<DisputeCategory, string> = {
   not_received: 'Not Received',
   not_as_described: 'Not As Described',
   defective: 'Defective',

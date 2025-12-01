@@ -32,7 +32,7 @@ import { calculateDisplayPrice, PLATFORM_FEE_PERCENTAGE } from '../../hooks/useO
 import { formatPrice } from '../../theme';
 import type { Category, Id, ProductCondition, ProductStatus, RootStackParamList } from '../../types';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: _SCREEN_WIDTH } = Dimensions.get('window');
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EditProduct'>;
 
@@ -775,7 +775,7 @@ export default function EditProductScreen({ route, navigation }: Props) {
           </Dialog.Title>
           <Dialog.Content>
             <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-              Are you sure you want to delete "{product.title}"? This action cannot be undone.
+              Are you sure you want to delete &quot;{product.title}&quot;? This action cannot be undone.
             </Text>
           </Dialog.Content>
           <Dialog.Actions>

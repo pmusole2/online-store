@@ -749,7 +749,7 @@ export default function OrderDetailScreen({ route, navigation }: Props) {
                   <View style={[styles.cardInfoBox, { backgroundColor: theme.colors.surfaceVariant }]}>
                     <Icon name="information-outline" size={20} color={theme.colors.primary} />
                     <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginLeft: 10, flex: 1 }}>
-                      You'll be redirected to a secure payment page to complete your card payment.
+                      You&apos;ll be redirected to a secure payment page to complete your card payment.
                     </Text>
                   </View>
                 </View>

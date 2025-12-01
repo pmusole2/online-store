@@ -33,7 +33,7 @@ export default function ProductDetailScreen({ route, navigation }: Props) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  const scrollY = useSharedValue(0);
+  const _scrollY = useSharedValue(0);
   const favoriteScale = useSharedValue(1);
 
   const product = useQuery(api.products.getProduct, { productId: productId as Id<'products'> });

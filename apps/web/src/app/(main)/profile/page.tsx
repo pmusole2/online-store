@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -47,11 +46,6 @@ export default function ProfilePage() {
   const products = useQuery(
     api.products.getProductsBySeller,
     user?._id ? { sellerId: user._id, status: "active" } : "skip"
-  );
-
-  const orders = useQuery(
-    api.orders.getBuyerOrders,
-    user?._id ? { buyerId: user._id } : "skip"
   );
 
   // Loading state

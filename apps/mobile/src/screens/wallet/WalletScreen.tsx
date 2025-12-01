@@ -119,7 +119,7 @@ export default function WalletScreen({ navigation }: Props) {
       }
       setWithdrawModalVisible(false);
       resetForm();
-    } catch (err) {
+    } catch {
       // Error is handled by the hook
     } finally {
       setProcessing(false);
@@ -153,7 +153,7 @@ export default function WalletScreen({ navigation }: Props) {
 
       setTopUpModalVisible(false);
       resetForm();
-    } catch (err) {
+    } catch {
       // Error is handled by the hook
     } finally {
       setProcessing(false);

@@ -17,7 +17,6 @@ import {
   BarChart3,
   FileText,
   Settings,
-  ChevronLeft,
   Store,
 } from "lucide-react";
 import { ROUTES } from "@/lib/constants";

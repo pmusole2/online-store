@@ -2,10 +2,8 @@ import { useState, useCallback } from 'react';
 import { Alert, Linking } from 'react-native';
 import {
   paymentService,
-  PaymentMethod,
   MobileMoneyProvider,
   TransactionStatus,
-  PaymentInitiationResponse,
   PaymentStatusResponse,
 } from '../services/payments';
 

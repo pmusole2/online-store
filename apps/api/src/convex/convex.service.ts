@@ -15,7 +15,9 @@ export class ConvexService implements OnModuleInit {
   onModuleInit() {
     const url = this.configService.get<string>('convex.url');
     if (!url) {
-      console.warn('Convex URL not configured - Convex features will be disabled');
+      console.warn(
+        'Convex URL not configured - Convex features will be disabled',
+      );
       return;
     }
     this.convexUrl = url;
@@ -28,7 +30,10 @@ export class ConvexService implements OnModuleInit {
     }
   }
 
-  private async query<T>(functionPath: string, args: Record<string, any> = {}): Promise<T> {
+  private async query<T>(
+    functionPath: string,
+    args: Record<string, any> = {},
+  ): Promise<T> {
     this.ensureConfigured();
 
     const response = await fetch(`${this.convexUrl}/api/query`, {
@@ -49,7 +54,10 @@ export class ConvexService implements OnModuleInit {
     return result.value;
   }
 
-  private async mutation<T>(functionPath: string, args: Record<string, any> = {}): Promise<T> {
+  private async mutation<T>(
+    functionPath: string,
+    args: Record<string, any> = {},
+  ): Promise<T> {
     this.ensureConfigured();
 
     console.log(`🔄 Calling Convex mutation: ${functionPath}`);
@@ -149,7 +157,11 @@ export class ConvexService implements OnModuleInit {
   }
 
   // Dispute mutations
-  async updateDisputeAiAnalysis(disputeId: string, summary: string, suggestions: string[]) {
+  async updateDisputeAiAnalysis(
+    disputeId: string,
+    summary: string,
+    suggestions: string[],
+  ) {
     return await this.mutation<any>('disputes:updateAISummary', {
       disputeId,
       aiSummary: summary,
@@ -185,12 +197,16 @@ export class ConvexService implements OnModuleInit {
 
   // Get user's orders (as buyer)
   async getUserOrders(userId: string) {
-    return await this.query<any[]>('orders:getBuyerOrders', { buyerId: userId });
+    return await this.query<any[]>('orders:getBuyerOrders', {
+      buyerId: userId,
+    });
   }
 
   // Get user's listings (products they're selling)
   async getUserListings(userId: string) {
-    return await this.query<any[]>('products:getProductsBySeller', { sellerId: userId });
+    return await this.query<any[]>('products:getProductsBySeller', {
+      sellerId: userId,
+    });
   }
 
   // Get marketplace stats
@@ -261,12 +277,16 @@ export class ConvexService implements OnModuleInit {
 
   // Get transaction by reference
   async getTransactionByReference(reference: string) {
-    return await this.query<any>('transactions:getTransactionByReference', { reference });
+    return await this.query<any>('transactions:getTransactionByReference', {
+      reference,
+    });
   }
 
   // Get transaction by ID
   async getTransaction(transactionId: string) {
-    return await this.query<any>('transactions:getTransaction', { transactionId });
+    return await this.query<any>('transactions:getTransaction', {
+      transactionId,
+    });
   }
 
   // Get user's transactions
@@ -280,7 +300,9 @@ export class ConvexService implements OnModuleInit {
 
   // Get order transactions
   async getOrderTransactions(orderId: string) {
-    return await this.query<any[]>('transactions:getOrderTransactions', { orderId });
+    return await this.query<any[]>('transactions:getOrderTransactions', {
+      orderId,
+    });
   }
 
   // Get pre-purchase conversation history for a product/buyer combo
@@ -294,7 +316,10 @@ export class ConvexService implements OnModuleInit {
         timestamp: number;
       }>;
       messageCount: number;
-    } | null>('conversations:getProductConversationHistory', { productId, buyerId });
+    } | null>('conversations:getProductConversationHistory', {
+      productId,
+      buyerId,
+    });
   }
 
   // Get comprehensive order details for AI context
@@ -316,13 +341,19 @@ export class ConvexService implements OnModuleInit {
       // Fetch all related data in parallel
       const [transactions, disputeData] = await Promise.all([
         this.getOrderTransactions(orderId).catch(() => []),
-        this.query<Record<string, unknown> | null>('disputes:getDisputeByOrder', { orderId }).catch(() => null),
+        this.query<Record<string, unknown> | null>(
+          'disputes:getDisputeByOrder',
+          { orderId },
+        ).catch(() => null),
       ]);
 
       // Get escrow if exists
       let escrow: Record<string, unknown> | null = null;
       try {
-        escrow = await this.query<Record<string, unknown> | null>('escrow:getEscrowByOrder', { orderId });
+        escrow = await this.query<Record<string, unknown> | null>(
+          'escrow:getEscrowByOrder',
+          { orderId },
+        );
       } catch {
         // Escrow might not exist yet
       }
@@ -346,7 +377,9 @@ export class ConvexService implements OnModuleInit {
             order.buyerId,
           );
           if (prePurchase?.messages) {
-            prePurchaseMessages = prePurchase.messages as Array<Record<string, unknown>>;
+            prePurchaseMessages = prePurchase.messages as Array<
+              Record<string, unknown>
+            >;
           }
         } catch {
           // Ignore pre-purchase fetch errors
@@ -354,7 +387,11 @@ export class ConvexService implements OnModuleInit {
       }
 
       // Build timeline
-      const timeline: Array<{ event: string; timestamp: number; details?: string }> = [];
+      const timeline: Array<{
+        event: string;
+        timestamp: number;
+        details?: string;
+      }> = [];
 
       // Order created
       timeline.push({
@@ -375,13 +412,23 @@ export class ConvexService implements OnModuleInit {
           timeline.push({
             event: 'Payment failed',
             timestamp: tx.updatedAt || tx.createdAt,
-            details: tx.failureReason as string || 'Payment could not be processed',
+            details:
+              (tx.failureReason as string) || 'Payment could not be processed',
           });
         }
       }
 
       // Order status updates (we'll infer from current status)
-      if (order.status === 'paid' || ['processing', 'shipped', 'delivered', 'completed', 'disputed'].includes(order.status)) {
+      if (
+        order.status === 'paid' ||
+        [
+          'processing',
+          'shipped',
+          'delivered',
+          'completed',
+          'disputed',
+        ].includes(order.status)
+      ) {
         timeline.push({
           event: 'Order confirmed',
           timestamp: order.updatedAt,
@@ -389,11 +436,15 @@ export class ConvexService implements OnModuleInit {
         });
       }
 
-      if (['shipped', 'delivered', 'completed', 'disputed'].includes(order.status)) {
+      if (
+        ['shipped', 'delivered', 'completed', 'disputed'].includes(order.status)
+      ) {
         timeline.push({
           event: 'Order shipped',
           timestamp: order.shippedAt || order.updatedAt,
-          details: order.trackingNumber ? `Tracking: ${order.trackingNumber}` : 'Item dispatched',
+          details: order.trackingNumber
+            ? `Tracking: ${order.trackingNumber}`
+            : 'Item dispatched',
         });
       }
 
@@ -419,7 +470,9 @@ export class ConvexService implements OnModuleInit {
             | undefined;
           timeline.push({
             event: 'Dispute resolved',
-            timestamp: (resolution?.resolvedAt as number) || (disputeData.updatedAt as number),
+            timestamp:
+              (resolution?.resolvedAt as number) ||
+              (disputeData.updatedAt as number),
             details: `Resolution: ${resolution?.type || 'mutual agreement'}`,
           });
         }
@@ -437,7 +490,8 @@ export class ConvexService implements OnModuleInit {
         if (escrow.status === 'released') {
           timeline.push({
             event: 'Funds released to seller',
-            timestamp: escrow.releasedAt as number || escrow.updatedAt as number,
+            timestamp:
+              (escrow.releasedAt as number) || (escrow.updatedAt as number),
             details: `K${(escrow.sellerAmount as number)?.toLocaleString()} paid out`,
           });
         }
@@ -445,7 +499,7 @@ export class ConvexService implements OnModuleInit {
           timeline.push({
             event: 'Buyer refunded',
             timestamp: escrow.updatedAt as number,
-            details: `K${(escrow.refundAmount as number || escrow.grossAmount as number)?.toLocaleString()} returned`,
+            details: `K${((escrow.refundAmount as number) || (escrow.grossAmount as number))?.toLocaleString()} returned`,
           });
         }
       }
@@ -472,22 +526,34 @@ export class ConvexService implements OnModuleInit {
 
   // Get seller's orders
   async getSellerOrders(sellerId: string) {
-    return await this.query<Array<Record<string, unknown>>>('orders:getSellerOrders', { sellerId });
+    return await this.query<Array<Record<string, unknown>>>(
+      'orders:getSellerOrders',
+      { sellerId },
+    );
   }
 
   // Get user's disputes (as buyer)
   async getBuyerDisputes(buyerId: string) {
-    return await this.query<Array<Record<string, unknown>>>('disputes:getBuyerDisputes', { buyerId });
+    return await this.query<Array<Record<string, unknown>>>(
+      'disputes:getBuyerDisputes',
+      { buyerId },
+    );
   }
 
   // Get user's disputes (as seller)
   async getSellerDisputes(sellerId: string) {
-    return await this.query<Array<Record<string, unknown>>>('disputes:getSellerDisputes', { sellerId });
+    return await this.query<Array<Record<string, unknown>>>(
+      'disputes:getSellerDisputes',
+      { sellerId },
+    );
   }
 
   // Get escrow by order
   async getEscrowByOrder(orderId: string) {
-    return await this.query<Record<string, unknown> | null>('escrow:getEscrowByOrder', { orderId });
+    return await this.query<Record<string, unknown> | null>(
+      'escrow:getEscrowByOrder',
+      { orderId },
+    );
   }
 
   // ============ Wallet Methods ============
@@ -544,7 +610,11 @@ export class ConvexService implements OnModuleInit {
     escrowId?: string;
     externalReference?: string;
     metadata?: Record<string, unknown>;
-  }): Promise<{ transactionId: string; reference: string; newBalance: number }> {
+  }): Promise<{
+    transactionId: string;
+    reference: string;
+    newBalance: number;
+  }> {
     return await this.mutation('wallet:creditWallet', data);
   }
 

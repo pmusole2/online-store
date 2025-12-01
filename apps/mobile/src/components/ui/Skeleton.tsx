@@ -26,6 +26,8 @@ export function Skeleton({ width = '100%', height = 20, borderRadius = 8, style 
       -1,
       false
     );
+    // shimmer is a stable shared value reference, no need to include in deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({

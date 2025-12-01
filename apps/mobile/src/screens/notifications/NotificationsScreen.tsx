@@ -11,7 +11,7 @@ import Animated, {
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../../../convex/_generated/api';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { RootStackParamList, Notification, Id } from '../../types';
+import type { RootStackParamList, Notification } from '../../types';
 import { useAppAuth } from '../../context/AuthProvider';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { MotiView } from 'moti';
@@ -160,7 +160,7 @@ export default function NotificationsScreen({ navigation }: Props) {
           notificationId: notification._id,
           userId: user._id,
         });
-      } catch (error) {
+      } catch {
         // Silent fail - not critical
       }
     }
@@ -179,7 +179,7 @@ export default function NotificationsScreen({ navigation }: Props) {
     if (!user) return;
     try {
       await markAllAsRead({ userId: user._id });
-    } catch (error) {
+    } catch {
       // Silent fail
     }
   };
@@ -247,7 +247,7 @@ export default function NotificationsScreen({ navigation }: Props) {
             variant="bodyMedium"
             style={{ color: theme.colors.onSurfaceVariant, marginTop: 8, textAlign: 'center' }}
           >
-            You're all caught up! We'll notify you when something important happens.
+            You&apos;re all caught up! We&apos;ll notify you when something important happens.
           </Text>
         </View>
       </View>

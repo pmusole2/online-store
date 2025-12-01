@@ -147,7 +147,7 @@ export default function SignInScreen({ navigation }: Props) {
 
             <View style={styles.footer}>
               <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
               </Text>
               <Button
                 mode="text"

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useState } from "react";
@@ -106,7 +107,7 @@ export default function CartPage() {
         userId: user._id,
         selectedShipping: { name: shippingName, price: shippingPrice },
       });
-    } catch (error) {
+    } catch {
       toast.error("Failed to update shipping option");
     }
   };
@@ -119,7 +120,7 @@ export default function CartPage() {
     try {
       await removeFromCart({ cartItemId, userId: user._id });
       toast.success("Item removed from cart");
-    } catch (error) {
+    } catch {
       toast.error("Failed to remove item");
     } finally {
       setRemovingItems((prev) => {
@@ -136,7 +137,7 @@ export default function CartPage() {
     try {
       await clearCart({ userId: user._id });
       toast.success("Cart cleared");
-    } catch (error) {
+    } catch {
       toast.error("Failed to clear cart");
     }
   };
