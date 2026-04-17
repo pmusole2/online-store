@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { ChangeEvent, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
+import { useConvex, useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../../../convex/_generated/api";
 import { Id } from "../../../../../../../convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,10 @@ import {
 } from "lucide-react";
 import { ROUTES, CONDITION_DISPLAY_NAMES, ZAMBIAN_PROVINCES } from "@/lib/constants";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  MAX_PRODUCT_IMAGE_COUNT,
+  validateProductImageFiles,
+} from "@/lib/product-image-upload";
 import { toast } from "sonner";
 
 interface ShippingOption {
@@ -58,11 +62,23 @@ interface Specification {
   value: string;
 }
 
+interface UploadedProductImage {
+  id: string;
+  fileName: string;
+  status: "uploading" | "uploaded" | "failed";
+  url?: string;
+  storageId?: Id<"_storage">;
+  error?: string;
+}
+
 export default function CreateListingPage() {
   const router = useRouter();
   const { user, isSignedIn, isLoading: authLoading } = useAuth();
+  const convex = useConvex();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -76,7 +92,7 @@ export default function CreateListingPage() {
     province: "",
     status: "active" as "draft" | "active",
   });
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<UploadedProductImage[]>([]);
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([
     { name: "Standard Delivery", price: 0, estimatedDays: "3-5 days" },
   ]);
@@ -96,9 +112,13 @@ export default function CreateListingPage() {
 
   // Mutations
   const createProduct = useMutation(api.products.createProduct);
+  const generateUploadUrl = useMutation(api.storage.generateUploadUrl);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
+    const uploadedImageUrls = images
+      .filter((image) => image.status === "uploaded" && image.url)
+      .map((image) => image.url as string);
 
     if (!formData.title.trim()) {
       newErrors.title = "Title is required";
@@ -120,8 +140,12 @@ export default function CreateListingPage() {
       newErrors.categoryId = "Please select a category";
     }
 
-    if (images.length === 0) {
+    if (uploadedImageUrls.length === 0) {
       newErrors.images = "Please add at least one image";
+    }
+
+    if (images.some((image) => image.status === "uploading")) {
+      newErrors.images = "Please wait for image uploads to finish";
     }
 
     if (parseInt(formData.quantity) < 1) {
@@ -154,6 +178,10 @@ export default function CreateListingPage() {
     setIsSubmitting(true);
 
     try {
+      const uploadedImageUrls = images
+        .filter((image) => image.status === "uploaded" && image.url)
+        .map((image) => image.url as string);
+
       const productId = await createProduct({
         sellerId: user._id,
         title: formData.title.trim(),
@@ -166,7 +194,7 @@ export default function CreateListingPage() {
         subcategoryId: formData.subcategoryId
           ? (formData.subcategoryId as Id<"categories">)
           : undefined,
-        images,
+        images: uploadedImageUrls,
         condition: formData.condition,
         quantity: parseInt(formData.quantity),
         specifications: specifications.filter(
@@ -251,17 +279,129 @@ export default function CreateListingPage() {
     setTags(tags.filter((t) => t !== tag));
   };
 
-  const handleImageUpload = () => {
-    // For demo, using placeholder images
-    // In production, this would integrate with Convex file storage or a CDN
-    const placeholderUrls = [
-      "https://via.placeholder.com/600x600?text=Product+Image",
-      "https://via.placeholder.com/600x600?text=Product+2",
-      "https://via.placeholder.com/600x600?text=Product+3",
-    ];
-    const newImage = placeholderUrls[images.length % placeholderUrls.length];
-    if (images.length < 10) {
-      setImages([...images, newImage]);
+  const clearImageError = () => {
+    setErrors((currentErrors) => {
+      if (!currentErrors.images) {
+        return currentErrors;
+      }
+
+      const rest = { ...currentErrors };
+      delete rest.images;
+      return rest;
+    });
+  };
+
+  const uploadImage = async (file: File, imageId: string) => {
+    try {
+      const uploadUrl = await generateUploadUrl();
+      const uploadResponse = await fetch(uploadUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": file.type,
+        },
+        body: file,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error("Upload request failed");
+      }
+
+      const { storageId } = (await uploadResponse.json()) as {
+        storageId: Id<"_storage">;
+      };
+      const publicUrl = await convex.query(api.storage.getUrl, { storageId });
+
+      if (!publicUrl) {
+        throw new Error("Unable to resolve the uploaded image URL");
+      }
+
+      setImages((currentImages) =>
+        currentImages.map((image) =>
+          image.id === imageId
+            ? {
+                ...image,
+                status: "uploaded",
+                storageId,
+                url: publicUrl,
+                error: undefined,
+              }
+            : image
+        )
+      );
+      clearImageError();
+      return true;
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Image upload failed";
+
+      setImages((currentImages) =>
+        currentImages.map((image) =>
+          image.id === imageId
+            ? {
+                ...image,
+                status: "failed",
+                error: message,
+              }
+            : image
+        )
+      );
+      return false;
+    }
+  };
+
+  const handleImageUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(event.target.files ?? []);
+    event.target.value = "";
+
+    if (selectedFiles.length === 0) {
+      return;
+    }
+
+    const { acceptedFiles, errors: validationErrors } = validateProductImageFiles(
+      selectedFiles,
+      images.length
+    );
+
+    if (validationErrors.length > 0) {
+      setErrors((currentErrors) => ({
+        ...currentErrors,
+        images: validationErrors[0],
+      }));
+      toast.error(validationErrors[0]);
+    }
+
+    if (acceptedFiles.length === 0) {
+      return;
+    }
+
+    setIsUploadingImages(true);
+
+    let failedUploads = 0;
+
+    for (const file of acceptedFiles) {
+      const imageId = `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+      setImages((currentImages) => [
+        ...currentImages,
+        {
+          id: imageId,
+          fileName: file.name,
+          status: "uploading",
+        },
+      ]);
+
+      const didUpload = await uploadImage(file, imageId);
+      if (!didUpload) {
+        failedUploads += 1;
+      }
+    }
+
+    setIsUploadingImages(false);
+
+    if (failedUploads > 0) {
+      toast.error(
+        `${failedUploads} image upload${failedUploads === 1 ? "" : "s"} failed. Successful uploads were kept.`
+      );
     }
   };
 
@@ -438,14 +578,35 @@ export default function CreateListingPage() {
                 {images.map((image, index) => (
                   <div key={index} className="relative group">
                     <div className="aspect-square overflow-hidden rounded-lg bg-muted">
-                      <img
-                        src={image}
-                        alt={`Product ${index + 1}`}
-                        className="h-full w-full object-cover"
-                      />
+                      {image.status === "uploaded" && image.url ? (
+                        <img
+                          src={image.url}
+                          alt={`Product ${index + 1}`}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full flex-col items-center justify-center gap-2 px-3 text-center">
+                          {image.status === "uploading" ? (
+                            <>
+                              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">
+                                Uploading {image.fileName}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <AlertCircle className="h-6 w-6 text-destructive" />
+                              <span className="text-xs text-destructive">
+                                {image.error || "Upload failed"}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <Button
                       variant="destructive"
+                      type="button"
                       size="icon"
                       className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={() => removeImage(index)}
@@ -460,15 +621,32 @@ export default function CreateListingPage() {
                   </div>
                 ))}
 
-                {images.length < 10 && (
-                  <button
-                    type="button"
-                    onClick={handleImageUpload}
-                    className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 flex flex-col items-center justify-center gap-2 transition-colors"
-                  >
-                    <ImagePlus className="h-8 w-8 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">Add Photo</span>
-                  </button>
+                {images.length < MAX_PRODUCT_IMAGE_COUNT && (
+                  <>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                      multiple
+                      className="hidden"
+                      onChange={handleImageUpload}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingImages}
+                      className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 flex flex-col items-center justify-center gap-2 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isUploadingImages ? (
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                      ) : (
+                        <ImagePlus className="h-8 w-8 text-muted-foreground" />
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        {isUploadingImages ? "Uploading..." : "Add Photo"}
+                      </span>
+                    </button>
+                  </>
                 )}
               </div>
               {errors.images && (

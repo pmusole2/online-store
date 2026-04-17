@@ -95,13 +95,13 @@ export function useWallet(): UseWalletReturn {
 
   useEffect(() => {
     if (convexActivity) {
-      setActivity(convexActivity as unknown as WalletActivity);
+      setActivity(convexActivity);
     }
   }, [convexActivity]);
 
   useEffect(() => {
     if (convexTransactions) {
-      setTransactions(convexTransactions as unknown as WalletTransaction[]);
+      setTransactions(convexTransactions);
     }
   }, [convexTransactions]);
 

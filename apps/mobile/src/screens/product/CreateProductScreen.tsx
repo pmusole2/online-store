@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Pressable, Image } from 'react-native';
-import { Text, TextInput, Button, useTheme, Surface } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, Alert, Pressable, Image, ActivityIndicator } from 'react-native';
+import { Text, TextInput, Button, useTheme, Surface, ProgressBar } from 'react-native-paper';
 import Animated, { FadeIn, FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useQuery, useMutation } from 'convex/react';
@@ -11,7 +11,7 @@ import { useAppAuth } from '../../context/AuthProvider';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { MotiView } from 'moti';
 import { calculateDisplayPrice, PLATFORM_FEE_PERCENTAGE } from '../../hooks/useOrderTotal';
-import * as ImagePicker from 'expo-image-picker';
+import { useImageUpload } from '../../hooks/useImageUpload';
 import { StackHeader } from '../../components/ui/Header';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreateProduct'>;
@@ -40,34 +40,25 @@ export default function CreateProductScreen({ navigation }: Props) {
   const [condition, setCondition] = useState<ProductCondition>('good');
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [location, setLocation] = useState('');
-  const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [deliveryType, setDeliveryType] = useState<'free' | 'paid'>('free');
   const [deliveryFee, setDeliveryFee] = useState('');
 
+  // Use the image upload hook for proper Convex storage handling
+  const {
+    images,
+    isUploading,
+    progress,
+    pickImages,
+    removeImage,
+    getImageUrls
+  } = useImageUpload();
+
   const categories = useQuery(api.categories.getCategoriesTree);
   const createProduct = useMutation(api.products.createProduct);
 
   const selectedCategory = categories?.find((c) => c._id === categoryId);
-
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: true,
-      quality: 0.8,
-      selectionLimit: 5 - images.length,
-    });
-
-    if (!result.canceled) {
-      const newImages = result.assets.map((asset) => asset.uri);
-      setImages([...images, ...newImages].slice(0, 5));
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
-  };
 
   const handleSubmit = async () => {
     if (!user) {
@@ -89,6 +80,9 @@ export default function CreateProductScreen({ navigation }: Props) {
     setLoading(true);
 
     try {
+      // Get the public Convex storage URLs for all uploaded images
+      const imageUrls = getImageUrls();
+
       await createProduct({
         sellerId: user._id,
         categoryId: categoryId as Id<'categories'>,
@@ -96,7 +90,7 @@ export default function CreateProductScreen({ navigation }: Props) {
         description: description.trim(),
         price: priceNum,
         condition,
-        images: images,
+        images: imageUrls,
         quantity: 1,
         shippingOptions: [{
           name: deliveryType === 'free' ? 'Free Delivery' : 'Standard Delivery',
@@ -123,7 +117,7 @@ export default function CreateProductScreen({ navigation }: Props) {
     cat.subcategories?.forEach((sub) => flatCategories.push(sub));
   });
 
-  const isValid = title.trim() && description.trim() && price && categoryId;
+  const isValid = title.trim() && description.trim() && price && categoryId && !isUploading;
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -144,7 +138,9 @@ export default function CreateProductScreen({ navigation }: Props) {
               <MotiView
                 from={{ rotate: '0deg' }}
                 animate={{ rotate: '360deg' }}
-                transition={{ type: 'timing', duration: 8000, loop: true }}
+                transition={{
+                  rotate: { type: 'timing', duration: 8000, loop: true },
+                }}
               >
                 <Icon name="creation" size={24} color={theme.colors.tertiary} />
               </MotiView>
@@ -177,14 +173,30 @@ export default function CreateProductScreen({ navigation }: Props) {
               </View>
             </View>
 
+            {/* Upload progress indicator */}
+            {isUploading && (
+              <View style={styles.uploadProgress}>
+                <ProgressBar progress={progress / 100} color={theme.colors.primary} style={{ borderRadius: 4 }} />
+                <Text variant="labelSmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 4, textAlign: 'center' }}>
+                  Uploading... {Math.round(progress)}%
+                </Text>
+              </View>
+            )}
+
             <View style={styles.imagesGrid}>
-            {images.map((uri, index) => (
-                <Animated.View key={index} entering={FadeInRight.delay(index * 50).duration(300)}>
+            {images.map((image, index) => (
+                <Animated.View key={image.storageId || index} entering={FadeInRight.delay(index * 50).duration(300)}>
                   <View style={styles.imageWrapper}>
-                    <Image source={{ uri }} style={styles.imagePreview} resizeMode="cover" />
+                    {/* Use localUri for fast preview, or url as fallback */}
+                    <Image
+                      source={{ uri: image.localUri || image.url }}
+                      style={styles.imagePreview}
+                      resizeMode="cover"
+                    />
                 <Pressable
                   style={[styles.removeImageButton, { backgroundColor: theme.colors.error }]}
-                  onPress={() => removeImage(index)}
+                      onPress={() => removeImage(index)}
+                      disabled={isUploading}
                 >
                       <Icon name="close" size={14} color="#fff" />
                 </Pressable>
@@ -196,10 +208,10 @@ export default function CreateProductScreen({ navigation }: Props) {
               </View>
                 </Animated.View>
             ))}
-            {images.length < 5 && (
+            {images.length < 5 && !isUploading && (
               <Pressable
                   style={[styles.addImageButton, { borderColor: theme.colors.primary + '50' }]}
-                onPress={pickImage}
+                onPress={() => pickImages(5)}
               >
                   <LinearGradient
                     colors={[theme.colors.primaryContainer + '50', theme.colors.primaryContainer + '30']}
@@ -211,6 +223,11 @@ export default function CreateProductScreen({ navigation }: Props) {
                 </Text>
                   </LinearGradient>
               </Pressable>
+            )}
+            {isUploading && images.length < 5 && (
+              <View style={[styles.addImageButton, styles.uploadingPlaceholder, { borderColor: theme.colors.primary + '30' }]}>
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+              </View>
             )}
           </View>
           </Surface>
@@ -651,10 +668,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
+  uploadProgress: {
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
   imagesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
+  },
+  uploadingPlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
   },
   imageWrapper: {
     position: 'relative',

@@ -302,8 +302,7 @@ export class PaymentsController {
             ? signature.substring(0, 20) + '...'
             : 'missing',
         });
-        // Log but don't fail - continue processing
-        // throw new HttpException('Invalid signature', HttpStatus.UNAUTHORIZED);
+        throw new HttpException('Invalid signature', HttpStatus.UNAUTHORIZED);
       }
 
       // Handle collection.successful - for wallet top-ups
@@ -465,7 +464,10 @@ export class PaymentsController {
       return { received: true };
     } catch (error) {
       console.error('Webhook processing error:', error);
-      // Still return 200 to prevent Lenco from retrying
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
       return { received: true };
     }
   }

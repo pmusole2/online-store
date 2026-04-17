@@ -38,12 +38,11 @@ export function usePushNotifications(_userId?: Id<'users'>): UsePushNotification
     }
 
     try {
-      // Type assertion needed due to known expo-notifications typing issue
-      const permissionResponse = await Notifications.getPermissionsAsync() as unknown as { status: string };
+      const permissionResponse = await Notifications.getPermissionsAsync();
       let finalStatus = permissionResponse.status;
 
       if (finalStatus !== 'granted') {
-        const requestResponse = await Notifications.requestPermissionsAsync() as unknown as { status: string };
+        const requestResponse = await Notifications.requestPermissionsAsync();
         finalStatus = requestResponse.status;
       }
 

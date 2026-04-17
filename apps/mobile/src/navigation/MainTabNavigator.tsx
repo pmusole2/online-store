@@ -89,7 +89,10 @@ function AnimatedTabIcon({ focused, iconName, color, size, isCenter = false }: A
         <MotiView
           from={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: 'spring', damping: 15 }}
+          transition={{
+            opacity: { type: 'spring', damping: 15 },
+            scale: { type: 'spring', damping: 15 },
+          }}
           style={[styles.activeIndicator, { backgroundColor: theme.colors.primary + '20' }]}
         />
       )}

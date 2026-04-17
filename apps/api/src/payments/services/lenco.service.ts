@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable, OnModuleInit } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import {
@@ -34,20 +39,31 @@ export class LencoService implements OnModuleInit {
     const apiKey = this.configService.get<string>('LENCO_API_KEY');
     const secretKey = this.configService.get<string>('LENCO_SECRET_KEY');
     const accountId = this.configService.get<string>('LENCO_ACCOUNT_ID');
-    const webhookSecret = this.configService.get<string>('LENCO_SECRET_KEY');
+    const webhookSecret = this.configService.get<string>(
+      'LENCO_WEBHOOK_SECRET',
+    );
 
     if (apiKey && secretKey && accountId) {
       this.config = {
         apiKey,
         secretKey,
-        baseUrl: this.configService.get<string>('LENCO_BASE_URL') || 'https://api.lenco.co/access/v2',
+        baseUrl:
+          this.configService.get<string>('LENCO_BASE_URL') ||
+          'https://api.lenco.co/access/v2',
         accountId,
         webhookSecret: webhookSecret || '',
         isConfigured: true,
       };
       console.log('✅ Lenco payment gateway configured');
+      if (!webhookSecret) {
+        console.warn(
+          '⚠️ Lenco webhook secret not configured - webhook signature verification is disabled',
+        );
+      }
     } else {
-      console.warn('⚠️ Lenco payment gateway not configured - missing credentials');
+      console.warn(
+        '⚠️ Lenco payment gateway not configured - missing credentials',
+      );
     }
   }
 
@@ -128,10 +144,14 @@ export class LencoService implements OnModuleInit {
   async collectMobileMoney(
     request: Omit<LencoMobileMoneyCollectionRequest, 'accountId'>,
   ): Promise<LencoCollectionResponse> {
-    return this.makeRequest<LencoCollectionResponse>('POST', '/collections/mobile-money', {
-      accountId: this.config.accountId,
-      ...request,
-    });
+    return this.makeRequest<LencoCollectionResponse>(
+      'POST',
+      '/collections/mobile-money',
+      {
+        accountId: this.config.accountId,
+        ...request,
+      },
+    );
   }
 
   /**
@@ -141,10 +161,14 @@ export class LencoService implements OnModuleInit {
   async collectCard(
     request: Omit<LencoCardCollectionRequest, 'accountId'>,
   ): Promise<LencoCollectionResponse> {
-    return this.makeRequest<LencoCollectionResponse>('POST', '/collections/card', {
-      accountId: this.config.accountId,
-      ...request,
-    });
+    return this.makeRequest<LencoCollectionResponse>(
+      'POST',
+      '/collections/card',
+      {
+        accountId: this.config.accountId,
+        ...request,
+      },
+    );
   }
 
   /**
@@ -152,15 +176,23 @@ export class LencoService implements OnModuleInit {
    * GET /collections/:id
    */
   async getCollection(collectionId: string): Promise<LencoCollectionResponse> {
-    return this.makeRequest<LencoCollectionResponse>('GET', `/collections/${collectionId}`);
+    return this.makeRequest<LencoCollectionResponse>(
+      'GET',
+      `/collections/${collectionId}`,
+    );
   }
 
   /**
    * Get collection status by reference
    * GET /collections/status/:reference
    */
-  async getCollectionByReference(reference: string): Promise<LencoCollectionResponse> {
-    return this.makeRequest<LencoCollectionResponse>('GET', `/collections/status/${reference}`);
+  async getCollectionByReference(
+    reference: string,
+  ): Promise<LencoCollectionResponse> {
+    return this.makeRequest<LencoCollectionResponse>(
+      'GET',
+      `/collections/status/${reference}`,
+    );
   }
 
   /**
@@ -190,7 +222,7 @@ export class LencoService implements OnModuleInit {
       console.log('🔐 Payload length:', payload.length);
       console.log(
         '🔐 Expected signature:',
-        expectedSignature.substring(0, 32) + '...'
+        expectedSignature.substring(0, 32) + '...',
       );
       console.log('🔐 Received signature:', signature.substring(0, 32) + '...');
     } else {
@@ -204,11 +236,14 @@ export class LencoService implements OnModuleInit {
    * Get available banks
    * GET /banks
    */
-  async getBanks(): Promise<{ status: boolean; data: Array<{ code: string; name: string }> }> {
-    return this.makeRequest<{ status: boolean; data: Array<{ code: string; name: string }> }>(
-      'GET',
-      '/banks',
-    );
+  async getBanks(): Promise<{
+    status: boolean;
+    data: Array<{ code: string; name: string }>;
+  }> {
+    return this.makeRequest<{
+      status: boolean;
+      data: Array<{ code: string; name: string }>;
+    }>('GET', '/banks');
   }
 
   /**
@@ -261,15 +296,19 @@ export class LencoService implements OnModuleInit {
     reference: string;
     narration?: string;
   }): Promise<LencoTransferResponse> {
-    return this.makeRequest<LencoTransferResponse>('POST', '/transfers/mobile-money', {
-      accountId: this.config.accountId,
-      phone: request.phone,
-      operator: request.operator,
-      amount: request.amount,
-      currency: request.currency || 'ZMW',
-      reference: request.reference,
-      narration: request.narration || 'Wallet withdrawal',
-    });
+    return this.makeRequest<LencoTransferResponse>(
+      'POST',
+      '/transfers/mobile-money',
+      {
+        accountId: this.config.accountId,
+        phone: request.phone,
+        operator: request.operator,
+        amount: request.amount,
+        currency: request.currency || 'ZMW',
+        reference: request.reference,
+        narration: request.narration || 'Wallet withdrawal',
+      },
+    );
   }
 
   /**
@@ -302,15 +341,23 @@ export class LencoService implements OnModuleInit {
    * GET /transfers/:id
    */
   async getTransfer(transferId: string): Promise<LencoTransferResponse> {
-    return this.makeRequest<LencoTransferResponse>('GET', `/transfers/${transferId}`);
+    return this.makeRequest<LencoTransferResponse>(
+      'GET',
+      `/transfers/${transferId}`,
+    );
   }
 
   /**
    * Get transfer status by reference
    * GET /transfers/status/:reference
    */
-  async getTransferByReference(reference: string): Promise<LencoTransferResponse> {
-    return this.makeRequest<LencoTransferResponse>('GET', `/transfers/status/${reference}`);
+  async getTransferByReference(
+    reference: string,
+  ): Promise<LencoTransferResponse> {
+    return this.makeRequest<LencoTransferResponse>(
+      'GET',
+      `/transfers/status/${reference}`,
+    );
   }
 
   /**
@@ -326,7 +373,10 @@ export class LencoService implements OnModuleInit {
       availableBalance: number;
     };
   }> {
-    return this.makeRequest('GET', `/accounts/${this.config.accountId}/balance`);
+    return this.makeRequest(
+      'GET',
+      `/accounts/${this.config.accountId}/balance`,
+    );
   }
 }
 

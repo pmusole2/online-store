@@ -1,12 +1,16 @@
 import { useState } from 'react';
-import { useMutation } from 'convex/react';
+import { useMutation, useConvex } from 'convex/react';
 import { api } from '../../../../convex/_generated/api';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
+import type { Id } from '../../../../convex/_generated/dataModel';
 
 interface UploadedImage {
-  uri: string;
+  /** The public Convex storage URL that can be accessed from anywhere */
+  url: string;
   storageId: string;
+  /** Local URI for preview purposes only - do not store in database */
+  localUri?: string;
 }
 
 interface UseImageUploadReturn {
@@ -17,7 +21,10 @@ interface UseImageUploadReturn {
   pickFromCamera: () => Promise<void>;
   removeImage: (index: number) => void;
   clearImages: () => void;
+  /** Returns the public Convex storage URL */
   uploadSingleImage: (uri: string) => Promise<string | null>;
+  /** Returns all public URLs from uploaded images */
+  getImageUrls: () => string[];
 }
 
 export function useImageUpload(initialImages: UploadedImage[] = []): UseImageUploadReturn {
@@ -26,6 +33,7 @@ export function useImageUpload(initialImages: UploadedImage[] = []): UseImageUpl
   const [progress, setProgress] = useState(0);
 
   const generateUploadUrl = useMutation(api.storage.generateUploadUrl);
+  const convex = useConvex();
 
   const compressImage = async (uri: string): Promise<string> => {
     const result = await ImageManipulator.manipulateAsync(
@@ -63,11 +71,19 @@ export function useImageUpload(initialImages: UploadedImage[] = []): UseImageUpl
 
       const { storageId } = await uploadResponse.json();
 
-      // Get the public URL
-      // Note: The URL will be fetched when needed via getUrl query
+      // Get the public URL from Convex storage
+      const publicUrl = await convex.query(api.storage.getUrl, {
+        storageId: storageId as Id<'_storage'>
+      });
+
+      if (!publicUrl) {
+        throw new Error('Failed to get storage URL');
+      }
+
       return {
-        uri: compressedUri,
+        url: publicUrl,
         storageId,
+        localUri: compressedUri,
       };
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -135,7 +151,7 @@ export function useImageUpload(initialImages: UploadedImage[] = []): UseImageUpl
 
   const uploadSingleImage = async (uri: string): Promise<string | null> => {
     const uploaded = await uploadImage(uri);
-    return uploaded?.storageId || null;
+    return uploaded?.url || null;
   };
 
   const removeImage = (index: number) => {
@@ -144,6 +160,10 @@ export function useImageUpload(initialImages: UploadedImage[] = []): UseImageUpl
 
   const clearImages = () => {
     setImages([]);
+  };
+
+  const getImageUrls = (): string[] => {
+    return images.map((img) => img.url);
   };
 
   return {
@@ -155,5 +175,6 @@ export function useImageUpload(initialImages: UploadedImage[] = []): UseImageUpl
     removeImage,
     clearImages,
     uploadSingleImage,
+    getImageUrls,
   };
 }

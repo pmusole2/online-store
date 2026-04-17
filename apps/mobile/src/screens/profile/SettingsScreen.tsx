@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView, Linking, Pressable } from 'react-native';
-import { Text, useTheme, List, Switch, Divider, Surface, RadioButton } from 'react-native-paper';
+import { Text, useTheme, Switch, Divider, Surface } from 'react-native-paper';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../types';
@@ -93,7 +93,9 @@ export default function SettingsScreen({ navigation }: Props) {
                     <MotiView
                       from={{ rotate: '0deg' }}
                       animate={{ rotate: '360deg' }}
-                      transition={{ type: 'timing', duration: 1000, loop: true }}
+                      transition={{
+                        rotate: { type: 'timing', duration: 1000, loop: true },
+                      }}
                     >
                       <Icon name="sync" size={14} color={theme.colors.primary} />
                     </MotiView>
@@ -132,7 +134,9 @@ export default function SettingsScreen({ navigation }: Props) {
                       animate={{
                         scale: themeMode === mode ? 1.1 : 1,
                       }}
-                      transition={{ type: 'spring', damping: 15 }}
+                      transition={{
+                        scale: { type: 'spring', damping: 15 },
+                      }}
                     >
                       <Icon
                         name={getThemeModeIcon(mode)}
@@ -333,7 +337,9 @@ export default function SettingsScreen({ navigation }: Props) {
           <MotiView
             from={{ opacity: 0.5 }}
             animate={{ opacity: 1 }}
-            transition={{ type: 'timing', duration: 1000, loop: true }}
+            transition={{
+              opacity: { type: 'timing', duration: 1000, loop: true },
+            }}
           >
             <Icon name="creation" size={24} color={theme.colors.primary} />
           </MotiView>

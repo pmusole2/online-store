@@ -1,25 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, ScrollView, Dimensions, Pressable, Alert, Image } from 'react-native';
-import { Text, useTheme, Button, Chip, Avatar, Snackbar, Surface } from 'react-native-paper';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../../../convex/_generated/api';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { RootStackParamList, ProductCondition, Id } from '../../types';
-import { useAppAuth } from '../../context/AuthProvider';
-import { formatPrice } from '../../theme';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { calculateDisplayPrice } from '../../hooks/useOrderTotal';
+import { useMutation, useQuery } from 'convex/react';
+import { differenceInHours, formatDistanceToNow } from 'date-fns';
+import { MotiView } from 'moti';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, Dimensions, Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Avatar, Button, Chip, Snackbar, Surface, Text, useTheme } from 'react-native-paper';
 import Animated, {
   FadeIn,
   FadeInUp,
-  useSharedValue,
   useAnimatedStyle,
+  useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { Skeleton } from '../../components/ui/Skeleton';
-import { MotiView } from 'moti';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { api } from '../../../../../convex/_generated/api';
 import { StackHeader } from '../../components/ui/Header';
-import { formatDistanceToNow, differenceInHours } from 'date-fns';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { useAppAuth } from '../../context/AuthProvider';
+import { calculateDisplayPrice } from '../../hooks/useOrderTotal';
+import { formatPrice } from '../../theme';
+import type { Id, ProductCondition, RootStackParamList } from '../../types';
 
 const { width } = Dimensions.get('window');
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -93,6 +93,7 @@ export default function ProductDetailScreen({ route, navigation }: Props) {
       Alert.alert('Error', errorMessage);
     }
   };
+
 
   const handleToggleFavorite = async () => {
     if (!user || !product) return;
