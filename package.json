@@ -22,11 +22,8 @@
     "db:create-admin": "npx convex run seed:createInitialAdmin"
   },
   "devDependencies": {
-    "convex": "^1.21.0",
-    "expo": "~54.0.25"
+    "convex": "^1.21.0"
   },
   "packageManager": "npm@10.9.0",
-  "dependencies": {
-    "react-native-worklets": "^0.5.1"
-  }
+  "dependencies": {}
 }
